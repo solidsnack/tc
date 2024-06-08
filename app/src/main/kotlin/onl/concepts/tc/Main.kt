@@ -5,6 +5,7 @@ import kotlin.system.exitProcess
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import picocli.CommandLine
+import picocli.CommandLine.RunLast
 
 
 class Main {
@@ -18,19 +19,26 @@ class Main {
         @JvmStatic
         fun main(args: Array<String>) {
             val cmd = CommandLine(App())
-            val app = cmd.getCommand<App>()
+                .setPosixClusteredShortOptionsAllowed(false)
+            cmd.setExecutionStrategy {
+                    val app = cmd.getCommand<App>()
 
-            println("app.level = ${app.level} app.debug = ${app.debug}")
+                    LogLevelControl.set(app.level)
+                    if (app.debug) {
+                        LogLevelControl.set(Release.application, Level.DEBUG)
+                    }
 
-            LogLevelControl.set(app.level)
-            if (app.debug) {
-                LogLevelControl.set(Release.application, Level.DEBUG)
-                logger.debug {
-                    "Enabled debug logging for ${Release.application}.*"
+                    logger.info {
+                        "Starting ${Release.name} (${Release.release})"
+                    }
+
+                    logger.debug {
+                        "debug = ${logger.isDebugEnabled()} " +
+                            "trace = ${logger.isTraceEnabled()}"
+                    }
+
+                    RunLast().execute(it)
                 }
-            }
-
-            logger.info { "Starting ${Release.name} (${Release.release})" }
 
             cmd.commandName = Release.name
             exitProcess(cmd.execute(*args))

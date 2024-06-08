@@ -1,5 +1,6 @@
 package onl.concepts.tc
 
+import java.lang.System.Logger.Level
 import java.util.concurrent.Callable
 import java.time.Instant
 
@@ -8,7 +9,6 @@ import picocli.CommandLine.*
 import picocli.CommandLine.Model.CommandSpec
 
 import onl.concepts.tc.timecodes.TimeCode8
-import java.lang.System.Logger.Level
 
 @Command(
     mixinStandardHelpOptions = true,
