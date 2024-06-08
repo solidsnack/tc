@@ -22,6 +22,7 @@ dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.slf4j:slf4j-api:2+")
+    implementation("org.apache.logging.log4j:log4j-core:2.+")
     implementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.+")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
