@@ -18,7 +18,20 @@ class Main {
         @JvmStatic
         fun main(args: Array<String>) {
             val cmd = CommandLine(App())
+            val app = cmd.getCommand<App>()
+
+            println("app.level = ${app.level} app.debug = ${app.debug}")
+
+            LogLevelControl.set(app.level)
+            if (app.debug) {
+                LogLevelControl.set(Release.application, Level.DEBUG)
+                logger.debug {
+                    "Enabled debug logging for ${Release.application}.*"
+                }
+            }
+
             logger.info { "Starting ${Release.name} (${Release.release})" }
+
             cmd.commandName = Release.name
             exitProcess(cmd.execute(*args))
         }

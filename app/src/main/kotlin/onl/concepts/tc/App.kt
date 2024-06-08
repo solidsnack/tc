@@ -8,6 +8,7 @@ import picocli.CommandLine.*
 import picocli.CommandLine.Model.CommandSpec
 
 import onl.concepts.tc.timecodes.TimeCode8
+import java.lang.System.Logger.Level
 
 @Command(
     mixinStandardHelpOptions = true,
@@ -22,8 +23,24 @@ class App : Callable<Int> {
         private val logger = KotlinLogging.logger {}
     }
 
+    @Option(
+        converter = [LogLevelString::class],
+        defaultValue = "WARNING",
+        description = ["Set log level to one of: ..."],
+        names = ["-l", "--log-level"],
+        scope = ScopeType.INHERIT,
+    )
+    var level: Level = Level.WARNING
+
+    @Option(
+        arity = "0",
+        description = ["Enable debugging for this application."],
+        names = ["-d", "--debug"],
+        scope = ScopeType.INHERIT,
+    )
+    var debug: Boolean = false
+
     @Command(
-        defaultValueProvider = UTCNow::class,
         description = ["Generate an 8 character time code."],
         usageHelpAutoWidth = true,
     )
@@ -32,13 +49,12 @@ class App : Callable<Int> {
             converter = [UTCString::class],
             description = ["A UTC datetime to render as a time code.",
                            "Defaults to present date and time."],
-            names = ["-d", "--datetime"],
-
+            names = ["-u", "--utc-timestamp"],
         )
-        datetime: Instant,
+        timestamp: Instant?,
     ): Int {
-        val tc = TimeCode8.of(datetime)
-        logger.info { "Translated $datetime to $tc" }
+        val tc = TimeCode8.of(timestamp ?: Instant.now())
+        logger.info { "Translated $timestamp to $tc" }
         println("$tc")
         return 0
     }
@@ -48,10 +64,9 @@ class App : Callable<Int> {
         return 0
     }
 
-    private class UTCNow: IDefaultValueProvider {
-        override fun defaultValue(argSpec: Model.ArgSpec?): String {
-            return Instant.now().toString()
-        }
+    private class LogLevelString: ITypeConverter<Level> {
+        override fun convert(value: String?): Level
+            = Level.valueOf(value!!.uppercase())
     }
 
     private class UTCString: ITypeConverter<Instant> {

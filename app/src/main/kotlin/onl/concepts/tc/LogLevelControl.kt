@@ -18,7 +18,18 @@ object LogLevelControl {
      *  Set the root log level.
      */
     fun set(level: Level) {
-        val log4j: org.apache.logging.log4j.Level = when (level) {
+        Configurator.setRootLevel(asLog4J(level))
+    }
+
+    /**
+     *  Set levels from the root for the given package.
+     */
+    fun set(packageName: String, level: Level) {
+        Configurator.setAllLevels(packageName, asLog4J(level))
+    }
+
+    private fun asLog4J(level: Level): org.apache.logging.log4j.Level
+        = when (level) {
             Level.ALL -> org.apache.logging.log4j.Level.ALL
             Level.TRACE -> org.apache.logging.log4j.Level.TRACE
             Level.DEBUG -> org.apache.logging.log4j.Level.DEBUG
@@ -27,7 +38,4 @@ object LogLevelControl {
             Level.ERROR -> org.apache.logging.log4j.Level.ERROR
             Level.OFF -> org.apache.logging.log4j.Level.OFF
         }
-
-        Configurator.setRootLevel(log4j)
-    }
 }
