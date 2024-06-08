@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+  <Appenders>
+    <Console name="stderr" target="SYSTEM_ERR">
+      <PatternLayout>
+        <pattern>
+          %highlight{%d{HH:mm:ss.SSS} %equals{[%equals{%t}{main}{}]}{[]}{} %-5p %logger{1.} - %msg%n%ex}
+        </pattern>
+      </PatternLayout>
+    </Console>
+  </Appenders>
+  <Loggers>
+    <Root level="INFO">
+      <AppenderRef ref="stderr"/>
+    </Root>
+    <Logger name="com.jcabi" level="ERROR"/>
+  </Loggers>
+</Configuration>

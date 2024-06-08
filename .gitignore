@@ -1,0 +1,10 @@
+tmp/
+
+# IDEs
+.idea/
+.vscode/
+
+# Gradle
+.gradle/
+build/
+
