@@ -89,21 +89,23 @@ tasks.shadowJar {
         attributes["Application"] = "$distinguishedName"
     }
 
-    archiveFileName.set("$distinguishedName@$v.cli.jar")
+    archiveFileName.set("$distinguishedName@$v.${project.name}.jar")
 
     doLast {
         val jar = tasks.shadowJar.get().archiveFile.get().asFile.toPath()
         val root = project(":").projectDir.toPath().toAbsolutePath()
         val rel = root.relativize(jar)
 
-        println("Shadow CLI JAR is: $rel")
+        val exportTarget = "${project.name}.jar"
+        val exportDir = project(":").buildDir.toPath()
 
         copy {
             from(jar)
-            into(project(":").buildDir)
-            rename { "cli.jar" }
+            into(exportDir)
+            rename { exportTarget }
         }
 
-        println("Copied Shadow CLI JAR to: build/cli.jar")
+        println("Shadow JAR for ${project.name} is: $rel")
+        println("Copied to: ${root.relativize(exportDir)}/$exportTarget")
     }
 }
