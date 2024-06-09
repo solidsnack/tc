@@ -2,6 +2,7 @@ package onl.concepts.tc
 
 import java.time.Duration
 import java.time.ZoneId
+import java.time.ZonedDateTime
 import kotlin.math.ceil
 
 object Time {
@@ -16,4 +17,37 @@ object Time {
     /// perfectly safe when considering seconds within a year.
     val upperBoundOnSecondsInYear: Int =
         ceil(upperBoundOnYearDuration.toMillis() / 1000.0).toInt()
+
+    /**
+     * Obtain the minimal representation that can be used with ISO 8601
+     * interval syntax to represent following UTC hour in tandem with the given
+     * value. For example:
+     * - For `2022-02-02T15:15Z`, the minimal representation of the following
+     *   hour is `16:00`. The interval can be represented as:
+     *   `2022-02-02T15:15Z/16:00Z`.
+     * - For `2022-02-28T23:23Z`, the minimal representation of the following
+     *   hour is `03-01T00:00`. The interval can be represented as:
+     *   `2022-02-28T23:23Z/03-01T00:00Z`.
+     */
+    fun followingHourMinimalRep(t: ZonedDateTime): String {
+        val result = StringBuilder()
+        val asUTC = t.withZoneSameInstant(utc)
+        val following = asUTC.plusHours(1)
+
+        if (following.year != asUTC.year) {
+            result.append(String.format("%04d-", following.year))
+        }
+
+        if (following.monthValue != asUTC.monthValue) {
+            result.append(String.format("%02d-", following.monthValue))
+        }
+
+        if (following.dayOfMonth != asUTC.dayOfMonth) {
+            result.append(String.format("%02dT", following.dayOfMonth))
+        }
+
+        result.append(String.format("%02d:00", following.hour))
+
+        return result.toString()
+    }
 }
