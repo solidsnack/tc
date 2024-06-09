@@ -53,8 +53,9 @@ class App : Callable<Int> {
         )
         timestamp: Instant?,
     ): Int {
-        val tc = Year8.of(timestamp ?: Instant.now())
-        logger.info { "Translated $timestamp to $tc" }
+        val t = timestamp ?: Instant.now()
+        val tc = Year8.of(t)
+        logger.info { "Translated $t to $tc" }
         println("$tc")
         return 0
     }

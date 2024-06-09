@@ -4,7 +4,7 @@
     <Console name="stderr" target="SYSTEM_ERR">
       <PatternLayout>
         <pattern>
-          %highlight{%d{HH:mm:ss.SSS} %equals{[%equals{%t}{main}{}]}{[]}{} %-5p %logger{1.} - %msg%n%ex}
+          %highlight{%d{yyyy-MM-dd'T'HH:mm:ss.SSS} %-5p %logger %equals{[%equals{%t}{main}{}]}{[]}{}%n▹ %msg%n%ex{4}}
         </pattern>
       </PatternLayout>
     </Console>
