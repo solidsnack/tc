@@ -73,9 +73,9 @@ object Year8 {
         val windowText = code.subSequence(7, 8)
 
         var hourIndex = 0
-        hourIndex = Base21.append(hourText[2], hourIndex)
-        hourIndex = Base21.append(hourText[1], hourIndex)
         hourIndex = Base20.append(hourText[0], hourIndex)
+        hourIndex = Base21.append(hourText[1], hourIndex)
+        hourIndex = Base21.append(hourText[2], hourIndex)
 
         // Why we do days and then hours:
         // * In principle, you could just turn hours into seconds and step into
@@ -84,7 +84,7 @@ object Year8 {
         // * While there may be more than 3600 seconds in an hour (3601 when a
         //   leap second is added, there are never more than 24 hours in a day.
         val year = Year.parse(yearText)
-        val day = (hourIndex / 24) + 1
+        val day = hourIndex / 24
         val hour = hourIndex % 24
         val window = Base21.append(windowText.first(), 0)
 
@@ -103,13 +103,16 @@ object Year8 {
             // The 20th window: the last window in most cases.
             20 -> {
                 val following = Time.followingHourMinimalRep(t)
-                "$prefix:57:00Z/${following}Z"
+                "$prefix:57Z/${following}Z"
             }
             else -> {
+                val start = window * 3
                 String.format(
-                    "%02d:00Z/%02d:00Z",
-                    window * 3,
-                    (window + 1) * 3,
+                    "%s:%02dZ/%02d:%02dZ",
+                    prefix,
+                    start,
+                    t.hour,
+                    start + 3,
                 )
             }
         }

@@ -2,7 +2,6 @@ package onl.concepts.tc.bases
 
 import onl.concepts.tc.TCErr
 
-
 /** No vowels (to prevent forming words and because `I` and `O` can be confused
  *  with numbers). Like Base20 but allows `L`.
  */
