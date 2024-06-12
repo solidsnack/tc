@@ -26,10 +26,10 @@ object TC8: TimeCode<TC8.Descriptor> {
         val twentiethIndex: Byte,
     ) {
         init {
-            assert(year < 10000) { "Year must be: [0,9999]" }
-            assert(semiMonth < 24) { "Semi-month must be: [0,23]" }
-            assert(dayAndHour < 400) { "Day-and-hour must be: [0,399]" }
-            assert(twentiethIndex < 20) {
+            assert(year in 0..9999) { "Year must be: [0,9999]" }
+            assert(semiMonth in 0..23) { "Semi-month must be: [0,23]" }
+            assert(dayAndHour in 0..399) { "Day-and-hour must be: [0,399]" }
+            assert(twentiethIndex in 0..19) {
                 "Index of twentieth part must be: [0,19]"
             }
         }
