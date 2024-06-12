@@ -37,9 +37,9 @@ application {
 }
 
 fun versionManager(): String {
-    val branch = grgit?.branch?.current()
-    val commit = grgit?.head()
-    val tags = grgit?.tag?.list()
+    val branch = grgit.branch?.current()
+    val commit = grgit.head()
+    val tags = grgit.tag?.list()
 
     fun formatDate(t: ZonedDateTime, suffix: String = "SNAPSHOT"): String {
         val utc = ZoneId.of("UTC")
@@ -94,16 +94,16 @@ tasks.shadowJar {
         val root = project(":").projectDir.toPath().toAbsolutePath()
         val rel = root.relativize(jar)
 
-        val exportTarget = "${project.name}.jar"
-        val exportDir = project(":").buildDir.toPath()
+        val extTarget = "${project.name}.jar"
+        val extDir = project(":").layout.buildDirectory.get().asFile.toPath()
 
         copy {
             from(jar)
-            into(exportDir)
-            rename { exportTarget }
+            into(extDir)
+            rename { extTarget }
         }
 
         println("Shadow JAR for ${project.name} is: $rel")
-        println("Copied to: ${root.relativize(exportDir)}/$exportTarget")
+        println("Copied to: ${root.relativize(extDir)}/$extTarget")
     }
 }
