@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
 plugins {
     kotlin("jvm")
 }
@@ -12,7 +15,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     testImplementation(kotlin("test"))
-    testImplementation("io.kotest:kotest-property:5.+")
     testImplementation("net.jqwik:jqwik:1.+")
     testImplementation("net.jqwik:jqwik-kotlin:1.+")
     testImplementation("org.apache.logging.log4j:log4j-core:2.+")
@@ -37,4 +39,22 @@ tasks.test {
     }
 
     systemProperty("jqwik.database", "tmp/jqwik-database")
+
+    testLogging {
+        lifecycle {
+            events = mutableSetOf(
+                TestLogEvent.FAILED,
+                TestLogEvent.PASSED,
+                TestLogEvent.SKIPPED,
+            )
+            exceptionFormat = TestExceptionFormat.FULL
+
+            showExceptions = true
+            showCauses = true
+            showStackTraces = false
+            showStandardStreams = false
+        }
+        info.events = lifecycle.events
+        info.exceptionFormat = lifecycle.exceptionFormat
+    }
 }
