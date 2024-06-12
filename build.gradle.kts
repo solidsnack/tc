@@ -1,7 +1,8 @@
 plugins {
     application
-    kotlin("jvm") version "1.+"
-    kotlin("kapt") version "1.+"
+    kotlin("jvm") version "2.+"
+    kotlin("kapt") version "2.+"
+    id("org.jetbrains.dokka") version "1.+"
 }
 
 repositories {
@@ -11,4 +12,8 @@ repositories {
 tasks.withType<AbstractArchiveTask>().configureEach {
     isPreserveFileTimestamps = false
     isReproducibleFileOrder = true
+}
+
+subprojects {
+    apply(plugin = "org.jetbrains.dokka")
 }

@@ -8,7 +8,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import picocli.CommandLine.*
 import picocli.CommandLine.Model.CommandSpec
 
-import onl.concepts.tc.timecodes.Year8
+import onl.concepts.tc.timecodes.TC8
 
 @Command(
     mixinStandardHelpOptions = true,
@@ -44,7 +44,7 @@ class App : Callable<Int> {
         description = ["Generate an 8 character time code."],
         usageHelpAutoWidth = true,
     )
-    fun y8(
+    fun tc8(
         @Option(
             converter = [UTCString::class],
             description = ["A UTC datetime to render as a time code.",
@@ -54,7 +54,7 @@ class App : Callable<Int> {
         timestamp: Instant?,
     ): Int {
         val t = timestamp ?: Instant.now()
-        val tc = Year8.of(t)
+        val tc = TC8.encode(TC8.Descriptor.of(t))
         logger.info { "Translated $t to $tc" }
         println("$tc")
         return 0
