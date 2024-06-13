@@ -3,9 +3,9 @@ package onl.concepts.tc.bases
 import io.github.oshai.kotlinlogging.KotlinLogging
 import onl.concepts.tc.TCErr
 
-object Alpha24 {
-    private const val BASE = 24
-    private const val STRING = "ABCDEFGHIJKLMNOPQRSTUVWX"
+object Alpha12 {
+    private const val BASE = 12
+    private const val STRING = "DFHKLNPRTVXZ"
     private val characters = STRING.toCharArray()
 
     /**

@@ -7,7 +7,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 
 import onl.concepts.tc.Time
 import onl.concepts.tc.bases.Alpha20
-import onl.concepts.tc.bases.Alpha24
+import onl.concepts.tc.bases.Alpha12
 
 
 /**
@@ -17,20 +17,18 @@ object TC8: TimeCode<TC8.Descriptor> {
     data class Descriptor(
         /** Year, starting from 0. So 2023 is 2023 and so on. */
         val year: Short,
-        /** Semi-month starting from 0. The first month is 0 or 1, the second
-         *  is 2 or 3, and so on. */
-        val semiMonth: Byte,
-        /** The day and hour in within the half month in a combined format. */
-        val dayAndHour: Short,
-        /** The twentieth part of the hour. */
-        val twentiethIndex: Byte,
+        /** Month starting from 0. The first month is 0, the second
+         *  is 1, and so on. */
+        val month: Byte,
+        /** The day and 2-hour window and tenth part of the hour within the
+         *  month in a combined format. */
+        val indexOf10thOfHourIn32DayMonth: Short,
     ) {
         init {
             assert(year in 0..9999) { "Year must be: [0,9999]" }
-            assert(semiMonth in 0..23) { "Semi-month must be: [0,23]" }
-            assert(dayAndHour in 0..399) { "Day-and-hour must be: [0,399]" }
-            assert(twentiethIndex in 0..19) {
-                "Index of twentieth part must be: [0,19]"
+            assert(month in 0..11) { "Month must be: [0,11]" }
+            assert(indexOf10thOfHourIn32DayMonth in 0..7999) {
+                "Index of twentieth part must be: [0,7999]"
             }
         }
 
@@ -43,30 +41,28 @@ object TC8: TimeCode<TC8.Descriptor> {
                 val hour = utc.hour
                 val minute = utc.minute
 
-                var semiMonth = month * 2
-                var dh = (dom * 25) + hour
-                val twentiethIndex = minute / 3
-
-                if (dh >= 400) {
-                    semiMonth += 1
-                    dh -= 400
-                }
+                var indexOf10thOfHourIn32DayMonth = 0
+                // Beginning of day.
+                indexOf10thOfHourIn32DayMonth += 250 * dom
+                // Beginning of hour window.
+                indexOf10thOfHourIn32DayMonth += 10 * hour
+                // Beginning of six-minute window.
+                indexOf10thOfHourIn32DayMonth += minute / 6
 
                 return Descriptor(
                     year.toShort(),
-                    semiMonth.toByte(),
-                    dh.toShort(),
-                    twentiethIndex.toByte(),
+                    month.toByte(),
+                    indexOf10thOfHourIn32DayMonth.toShort(),
                 )
             }
         }
 
         private fun utc(): ZonedDateTime {
-            val month = semiMonth / 2
-            val halfOfMonth = semiMonth % 2
-            val day = (dayAndHour / 25) + (halfOfMonth * 16)
-            var hour = dayAndHour % 25
-            var minute = twentiethIndex * 3
+            val indexIn25HourDay = indexOf10thOfHourIn32DayMonth % 250
+
+            val day = indexOf10thOfHourIn32DayMonth / 250
+            var hour = indexIn25HourDay / 10
+            var minute = (indexIn25HourDay % 10) * 6
 
             // NB: Maps leap second / leap hour to last hour.
             if (hour > 23) {
@@ -92,31 +88,26 @@ object TC8: TimeCode<TC8.Descriptor> {
             // Adding 180 seconds is perfectly correct with
             // `java.time.Instant`, because in the smoothed UTC that
             // `java.time` implements, every day is exactly 86400 seconds.
-            return start().plusSeconds(180)
+            return start().plusSeconds(360)
         }
     }
 
     override fun encode(descriptor: Descriptor): String {
         val digits1234 = String.format("%04d", descriptor.year)
 
-        val (remSM, digit5) = Alpha24.nibble(descriptor.semiMonth.toInt())
+        val (remSM, digit5) = Alpha12.nibble(descriptor.month.toInt())
 
         assert(remSM == 0) {
             "There should be nothing left after translating the " +
-                "semi-month to base 24."
+                "month to base 12."
         }
 
-        val (remDH1, digit7) = Alpha20.nibble(descriptor.dayAndHour.toInt())
-        val (remDH2, digit6) = Alpha20.nibble(remDH1)
+        val i = descriptor.indexOf10thOfHourIn32DayMonth.toInt()
+        val (remDH1, digit8) = Alpha20.nibble(i)
+        val (remDH2, digit7) = Alpha20.nibble(remDH1)
+        val (remDH3, digit6) = Alpha20.nibble(remDH2)
 
-        assert(remDH2 == 0) {
-            "There should be nothing left after translating the " +
-                "day-and-hour to base 20."
-        }
-
-        val (remTI, digit8) = Alpha20.nibble(descriptor.twentiethIndex.toInt())
-
-        assert(remTI == 0) {
+        assert(remDH3 == 0) {
             "There should be nothing left after translating the " +
                 "index of the twentieth part to base 20."
         }
@@ -125,22 +116,21 @@ object TC8: TimeCode<TC8.Descriptor> {
     }
 
     override fun decode(s: String): Result<Descriptor> = try {
+        assert(s.length == 8) { "A TC8 descriptor is 8 characters." }
+
         val yearText = s.subSequence(0, 4)
         val semiMonthText = s.subSequence(4, 5)
-        val dhText = s.subSequence(5, 7)
-        val twentiethIndexText = s.subSequence(7, 8)
+        val rest = s.subSequence(5, 8)
 
         val year = Integer.parseInt(yearText.toString())
-        val semiMonth = semiMonthText.fold(0, Alpha24::accumulate)
-        val dh = dhText.fold(0, Alpha20::accumulate)
-        val twentiethIndex = twentiethIndexText.fold(0, Alpha20::accumulate)
+        val semiMonth = semiMonthText.fold(0, Alpha12::accumulate)
+        val indexOf10thOfHourIn32DayMonth = rest.fold(0, Alpha20::accumulate)
 
         Result.success(
             Descriptor(
                 year.toShort(),
                 semiMonth.toByte(),
-                dh.toShort(),
-                twentiethIndex.toByte(),
+                indexOf10thOfHourIn32DayMonth.toShort(),
             )
         )
     } catch (e: Exception) {

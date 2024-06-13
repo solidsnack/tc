@@ -13,12 +13,12 @@ import net.jqwik.api.Provide
 import onl.concepts.tc.Time
 
 object TC8Test: SetupTest() {
-    private val jun9 = // Generated for: 2024-06-09T02:16:32Z
-        Pair("2024KQKH", TC8.Descriptor(2024, 10, 227, 5))
+    private val nov3 = // Generated for: 2022-11-05T13:31:32Z
+        Pair("2022XJKH", TC8.Descriptor(2022, 10, 2545))
 
     @Test
     fun simpleEncoding() {
-        val (expected, descriptor) = jun9
+        val (expected, descriptor) = nov3
         val encoded = TC8.encode(descriptor)
 
         assertEquals(
@@ -30,7 +30,7 @@ object TC8Test: SetupTest() {
 
     @Test
     fun simpleDecoding() {
-        val (encoded, expected) = jun9
+        val (encoded, expected) = nov3
         val decoded = TC8.decode(encoded).getOrThrow()
 
         assertEquals(
@@ -41,7 +41,7 @@ object TC8Test: SetupTest() {
     }
 
     private val jan1 = // All values zero except year: 2019-01-01T00:00Z
-        Pair("2019ABBB", TC8.Descriptor(2019, 0, 0, 0))
+        Pair("2019DBBB", TC8.Descriptor(2019, 0, 0))
 
     @Test
     fun encodeAndDecodeFirstDayOfYear() {
@@ -86,7 +86,8 @@ object TC8Test: SetupTest() {
         assertContains(
             start..end,
             t,
-            "Encoded time is not within band for encoding ($encoded)."
+            "Encoded time ($t) is not within band for encoding " +
+                "($encoded, $descriptor)"
         )
     }
 
@@ -114,7 +115,8 @@ object TC8Test: SetupTest() {
         assertContains(
             start..end,
             t,
-            "Encoded time is not within band for encoding ($encoded)."
+            "Encoded time ($t) is not within band for encoding " +
+                "($encoded, $descriptor)"
         )
     }
 
@@ -124,28 +126,22 @@ object TC8Test: SetupTest() {
     }
 
     @Provide
-    fun innerSemiMonth(): Arbitrary<Byte> {
-        return Arbitraries.bytes().between(0, 23)
+    fun innerMonth(): Arbitrary<Byte> {
+        return Arbitraries.bytes().between(0, 11)
     }
 
     @Provide
-    fun innerDH(): Arbitrary<Short> {
-        return Arbitraries.shorts().between(0, 399)
-    }
-
-    @Provide
-    fun innerTwentiethIndex(): Arbitrary<Byte> {
-        return Arbitraries.bytes().between(0, 19)
+    fun innerTwentiethIndex(): Arbitrary<Short> {
+        return Arbitraries.shorts().between(0, 7999)
     }
 
     @Property
     fun caseIndifference(
         @ForAll("innerYear") year: Short,
-        @ForAll("innerSemiMonth") semiMonth: Byte,
-        @ForAll("innerDH") dh: Short,
-        @ForAll("innerTwentiethIndex") twentiethIndex: Byte,
+        @ForAll("innerMonth") month: Byte,
+        @ForAll("innerTwentiethIndex") twentiethIndex: Short,
     ) {
-        val descriptor = TC8.Descriptor(year, semiMonth, dh, twentiethIndex)
+        val descriptor = TC8.Descriptor(year, month, twentiethIndex)
         val encoded = TC8.encode(descriptor)
         val lower = encoded.lowercase()
 
@@ -153,7 +149,7 @@ object TC8Test: SetupTest() {
             descriptor,
             TC8.decode(lower).getOrThrow(),
             "Decoding of upper ($encoded) and lower ($lower) case resulted " +
-                "in different values.",
+                "in different values",
         )
     }
 
@@ -165,35 +161,27 @@ object TC8Test: SetupTest() {
     }
 
     @Provide
-    fun invalidInnerSemiMonth(): Arbitrary<Byte> {
+    fun invalidInnerMonth(): Arbitrary<Byte> {
         val below = Arbitraries.bytes().lessOrEqual(-1)
-        val above = Arbitraries.bytes().greaterOrEqual(24)
+        val above = Arbitraries.bytes().greaterOrEqual(12)
         return Arbitraries.oneOf(below, above)
     }
 
     @Provide
-    fun invalidInnerDH(): Arbitrary<Short> {
+    fun invalidInnerTwentiethIndex(): Arbitrary<Short> {
         val below = Arbitraries.shorts().lessOrEqual(-1)
-        val above = Arbitraries.shorts().greaterOrEqual(4000)
-        return Arbitraries.oneOf(below, above)
-    }
-
-    @Provide
-    fun invalidInnerTwentiethIndex(): Arbitrary<Byte> {
-        val below = Arbitraries.bytes().lessOrEqual(-1)
-        val above = Arbitraries.bytes().greaterOrEqual(20)
+        val above = Arbitraries.shorts().greaterOrEqual(8000)
         return Arbitraries.oneOf(below, above)
     }
 
     @Property
     fun outOfBoundsDescriptorsCanNotBeConstructed(
         @ForAll("invalidInnerYear") year: Short,
-        @ForAll("invalidInnerSemiMonth") semiMonth: Byte,
-        @ForAll("invalidInnerDH") dh: Short,
-        @ForAll("invalidInnerTwentiethIndex") twentiethIndex: Byte,
+        @ForAll("invalidInnerMonth") month: Byte,
+        @ForAll("invalidInnerTwentiethIndex") twentiethIndex: Short,
     ) {
         assertFails {
-            val d = TC8.Descriptor(year, semiMonth, dh, twentiethIndex)
+            val d = TC8.Descriptor(year, month, twentiethIndex)
         }
     }
 }

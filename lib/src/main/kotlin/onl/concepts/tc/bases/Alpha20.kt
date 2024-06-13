@@ -8,7 +8,7 @@ import onl.concepts.tc.TCErr
  */
 object Alpha20 {
     private const val BASE = 20
-    private const val STRING = "BCDFGHJKMNPQRSTVWXYZ"
+    private const val STRING = "BCDFGHJKLMNPQRSTVWXZ"
     private val characters = STRING.toCharArray()
 
     /**

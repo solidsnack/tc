@@ -4,16 +4,16 @@ The TCn Timecodes are a compact way to assign sortable identifiers to points in
 time. This is of use for release tags, lot numbers, purchase orders and
 other items were part of the identifier incorporates a date and time.
 
-- TC8 - `YYYY<alpha24><alpha20><alpha20><alpha20>`
-  - Represents a window of 3 minutes in UTC.
-  - Calendared: The same date in a different year will have the same text
-    following the first four digits.
-  - Intervals of 3 minutes are compatible with all time zones in common use.
+- TC8 - `YYYY<alpha12><alpha20><alpha20><alpha20>`
+  - Represents a window of 6 minutes in UTC.
+  - Calendared: The same date and time in a different year will have the same
+    encoding (except for the year), even in leap years.
+  - Intervals of 6 minutes fit wholly within one hour or another in all
+    timezones that are whole or half-hour offsets from UTC.
 - TC10 - `YYYY<alpha8><alpha8><alpha8><alpha8><alpha8><base10>`
   - Represents a window of 100 seconds.
   - A monotonic count of seconds since the beginning of the year, modulo 100.
-  - Simplified processing due to the reduced, contiguous alphabet.
-  - Especially convenient for embedded or disconnected operations.
+  - Simplified processing due to the reduced alphabet.
 
 ## Representation of Intervals
 
@@ -28,11 +28,10 @@ or an interval in time.
   - No vowels -- no words can be formed.
   - Integer value is the ASCII value minus 3, with bits
     above the third bit masked out: `(c - 3) & 0b111`
-- `alpha20` -- `[BCDFGHJKMNPQRSTVWXYZ]`
+- `alpha12` -- `[DFHKLNPRTVXZ]`
+    - Purely alphabetical base 12 with no vowels.
+- `alpha20` -- `[BCDFGHJKLMNPQRSTVWXZ]`
   - Purely alphabetical base 20, with no vowels -- no words can be formed.
-- `alpha24` -- `[A-X]`
-  - Purely alphabetical base 24.
-
 
 ## Regarding TC8 & UTC
 
@@ -42,51 +41,75 @@ minutes. The final four characters are a compact representation of a month and
 day, an hour and a twentieth of an hour.
 
 ```
-YYYY<alpha24><alpha20><alpha20><alpha20>
+YYYY<alpha12><alpha20><alpha20><alpha20>
     |      / |               / |      /
-    |     /  |              /  + TI -- The index of the 20th of the hour.
+    |     /  |              /  + TI -- The 20th part of two hours.
     |    /   |             /
-    |   /    + DH -- The day in the semi-month and the hour in that day.
+    |   /    + DH -- The two-day group and the two-hour window in the group.
     |  /
-    + SM -- The semi-month, the month and which half of the month.
+    + M -- The month.
 ```
 
-The semi-month assigns each month two halves. The first half is always 16 days.
-The second half may be anywhere from 12 to 15 days (though up to 16 can be
-represented). The coding is simply the letters in order: January gets `A` and
-`B`, February `C` and `D`, and so on.
+Every month is assigned a unique letter -- they are simply every other letter
+from `D` to `Z` (all consonants).
 
-The next two digits, in base 20, identify the day in the semi-month and the
-hour in the day. Two base 20 digits can enumerate 400 items, which is 16 * 25.
-Because each semi-month is 16 days, these digits give us a way to enumerate the
-hours in each day.
+The next two digits, in base 20, identify the day and 2-hour window. Two
+base 20 digits can enumerate 400 items, which is 16 * 25. This allows us to
+assign a code to every grouping of 2 hours in a month of up to 32 days with
+each day having up to 25 hours.
 
-The last digit, in base 20, identifies a window of three minutes in the hour.
-Because other time zones in general use are based directly on UTC, and
-differ by whole multiples of 3 minutes (generally whole hours, but
-sometimes with remainders of 30 or 45 minutes), these windows will generally be
-wholly within one hour or another, regardless of time zone.
+The last digit, in base 20, identifies the hour in the two-hour window and
+the six-minute window in the hour.
 
 ### Regarding Leap Seconds & Leap Years
 
 There are codes in the `DH` part of the TC8 code, the day and hour, that
-can be used to handle leap years and even leap seconds while remaining
-sortable.
+can be used to handle leap years and even leap seconds, without changing.
 
-The `DH` part represents an integer, from 0 to 399. There are 16 days in each
-semi-month, and 16 evenly divides 400, so each day gets 25 codes: the first day
-is 0 to 24, the second day is 25-49, and so on.
+The `DH` part represents an integer, from 0 to 399. This allows us to
+assign 25 codes to every two days. The 1st and 2nd get 0 to 24, the 3rd and 4th
+get 25 to 49, and so on. We use this to label every interval of two hours in
+the two days. The `TI` part allows us to assign a code each tenth of hour
+in the two hours.
 
-The second half of each month has at most 15 days, so a leap day can be
-added to any month, if needed. There is plenty of space in February for the
-29th day, when it is present, without changing the encoding of the days that
-follow it.
+There is plenty of space in February for the 29th day, when it is present,
+without changing the encoding of days in the months that follow February.
 
-Every day has a 25th hour; this is simply a consequence of evenly divvying up
-the 400 values among the 16 days. Because the UTC leap second is always in the
-last hour and minute of some UTC day, it can be represented as being in the
-25th hour. This results in an encoding that sorts after every other timecode in
-that day, but before all timecodes in the following day.
+Every day effectively has a 25th hour; this is simply a consequence of evenly
+divvying up the 400 values in `DH` and the 20 values in the `TI` among the
+32 days. Because the UTC leap second is always in the last hour and minute of
+some UTC day, it can be represented as being in the 25th hour. This results in
+an encoding that sorts after every other timecode in that day, but before all
+timecodes in the following day.
+
+This because every two days have a range of 25 values in the `DH` part. For
+example, the first two days values 0 to 24. The first twelve values (0 to 11)
+are for the 24 hours of the first day. The 13th code (12) is treated as split
+between the first day and the second day. The last twelve values (13 to 24)
+belong to the second day.
+
+- When the 13th code is set, the first ten values of the `TI` part (0 to 9)
+  are for the "25th hour" of the first day. Any leap seconds go in this hour.
+- When the 25th code is set, that last ten values of the `TI` part (10 to 19)
+  are for the "25th hour" of the second day. Any leap seconds go in this hour.
+
+To see how this works exactly, we can start by looking at the first two
+days of any month.
+
+- The first two days have `DH` codes 0 to 24.
+- The first twelve codes -- 0 to 11 -- are two hour windows that are in the
+  first day.
+
+So when we have `DH` code 1 (second group of two hours) and `TI` code 10
+(eleventh group of 6 minutes), we are referring to the 6-minute group at the
+beginning of the second hour in the second group of two hours --
+`03:00/03:06` -- in the first day of the month.
+
+Now what does `DH` code 11 refer to? It is the twelfth group of 2 hours -- this
+is interpreted as the last 2 hours of the first day of the month. Where we come
+to a wrinkle is `DH` code 12 -- the thirteenth group of 2 hours. It could be
+simply the first two hours of the next day, but if a leap second is on the 31st
+day of the month (they often are), then we have nowhere to put it.
 
 Whereas leap years and February 29th are unavoidable, many common timekeeping
 systems finesse leap seconds for us. There are two common strategies for
@@ -97,13 +120,6 @@ seconds. When working with systems like these, we will never need to set the
 change anything for us until we try to map it back to a time. For most use
 cases, it will be fine to map it to the last 3 minute interval in the 24 hour
 day.
-
-In timekeeping systems that provide something like UTC-SLS, every step of 3
-minutes on every day, from the beginning of the year, is actually evenly
-divisible by 180 seconds. Every day is exactly 86400 seconds. The seconds
-themselves changed (fractionally) in length on some days; but this does not
-affect timekeeping calculations unless another timescale, like TAI, is
-introduced.
 
 ## Regarding TC10 & TAI
 
