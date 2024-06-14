@@ -1,3 +1,4 @@
+/*                           This work by Jason Dusek is marked with CC0 1.0 */
 plugins {
     `kotlin-dsl`
 }

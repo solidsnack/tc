@@ -1,3 +1,4 @@
+/*                                          This work is marked with CC0 1.0 */
 plugins {
     application
     id("com.github.johnrengelman.shadow")
