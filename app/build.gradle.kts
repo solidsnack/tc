@@ -1,5 +1,4 @@
 import java.time.*
-import java.time.format.*
 
 plugins {
     application
@@ -42,10 +41,8 @@ fun versionManager(): String {
     val tags = grgit.tag?.list()
 
     fun formatDate(t: ZonedDateTime, suffix: String = "SNAPSHOT"): String {
-        val utc = ZoneId.of("UTC")
-        val fmt = DateTimeFormatter.BASIC_ISO_DATE
-        val local = LocalDateTime.from(t.withZoneSameInstant(utc))
-        return local.format(fmt) + "-" + suffix
+        val utc = t.toInstant()
+        return "${utc.toString().substring(0, 10).replace("-", "")}-$suffix"
     }
 
     if (commit == null) return formatDate(ZonedDateTime.now())
