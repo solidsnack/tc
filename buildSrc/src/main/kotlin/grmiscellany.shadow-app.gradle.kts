@@ -1,4 +1,4 @@
-/*                                          This work is marked with CC0 1.0 */
+/*   This is free and unencumbered software released into the public domain. */
 plugins {
     application
     id("com.github.johnrengelman.shadow")
