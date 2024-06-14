@@ -1,10 +1,7 @@
-import java.time.*
-
 plugins {
-    application
-    id("com.github.johnrengelman.shadow") version "7.+"
     kotlin("jvm")
     kotlin("kapt")
+    id("grmiscellany.shadow-app")
 }
 
 repositories {
@@ -24,47 +21,6 @@ dependencies {
     implementation("org.slf4j:slf4j-api:2+")
 }
 
-val distinguishedName = "${project(":").group}.${project(":").name}"
-
 kotlin {
     jvmToolchain(11)
-}
-
-application {
-    mainClass.set("$distinguishedName.Main")
-}
-
-tasks.shadowJar {
-    minimize {
-        exclude(dependency("org.jetbrains.kotlin:.*"))
-        exclude(dependency("org.apache.logging.log4j:.*"))
-    }
-
-    val v = archiveVersion.get()
-
-    manifest {
-        attributes["Multi-Release"] = "true"
-        attributes["Release"] = v
-        attributes["Application"] = "$distinguishedName"
-    }
-
-    archiveFileName.set("$distinguishedName@$v.${project.name}.jar")
-
-    doLast {
-        val jar = tasks.shadowJar.get().archiveFile.get().asFile.toPath()
-        val root = project(":").projectDir.toPath().toAbsolutePath()
-        val rel = root.relativize(jar)
-
-        val extTarget = "${project.name}.jar"
-        val extDir = project(":").layout.buildDirectory.get().asFile.toPath()
-
-        copy {
-            from(jar)
-            into(extDir)
-            rename { extTarget }
-        }
-
-        println("Shadow JAR for ${project.name} is: $rel")
-        println("Copied to: ${root.relativize(extDir)}/$extTarget")
-    }
 }
