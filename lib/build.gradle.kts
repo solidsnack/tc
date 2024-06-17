@@ -23,7 +23,7 @@ dependencies {
 }
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain(17)
     compilerOptions {
         javaParameters.set(true)
         freeCompilerArgs.add("-Xjsr305=strict")
