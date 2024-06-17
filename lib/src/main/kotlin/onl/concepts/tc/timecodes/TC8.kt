@@ -28,7 +28,7 @@ object TC8: TimeCode<TC8.Descriptor> {
             assert(year in 0..9999) { "Year must be: [0,9999]" }
             assert(month in 0..11) { "Month must be: [0,11]" }
             assert(indexOf10thOfHourIn32DayMonth in 0..7999) {
-                "Index of twentieth part must be: [0,7999]"
+                "Index must be: [0,7999]"
             }
         }
 
@@ -67,7 +67,7 @@ object TC8: TimeCode<TC8.Descriptor> {
             // NB: Maps leap second / leap hour to last hour.
             if (hour > 23) {
                 hour = 23
-                minute = 57
+                minute = 54
             }
 
             return ZonedDateTime.of(

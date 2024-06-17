@@ -70,7 +70,7 @@ class TC8 : Callable<Int> {
                 "inserted at the end of the day.",
                 "While a technically correct behavior for UTC, this is not",
                 "how time is implemented in many common computing systems.",
-                "It may lead to unexpected results."
+                "The output may be unexpected."
             ],
             names = ["-l"]
         )
@@ -78,7 +78,9 @@ class TC8 : Callable<Int> {
     }
 
     @Command(
-        description = ["Provide detailed information about a time code.",],
+        description = ["Provide detailed information about a timecode.",
+                       "This command presents a timecode in a diagnostic, ",
+                       "interval format.",],
         mixinStandardHelpOptions = true,
         usageHelpAutoWidth = true,
     )
