@@ -24,31 +24,40 @@ class App : Callable<Int> {
     }
 
     @Option(
-        converter = [LogLevelString::class],
-        defaultValue = "WARNING",
-        description = ["Set log level to one of: ..."],
-        names = ["-l", "--log-level"],
+        arity = "0",
+        description = ["With -v, print basic information.",
+                       "Pass up to three times for more information.",],
+        names = ["-v"],
         scope = ScopeType.INHERIT,
     )
-    var level: Level = Level.WARNING
+    var verbose: BooleanArray = BooleanArray(0)
 
     @Option(
         arity = "0",
-        description = ["Enable debugging for this application."],
-        names = ["-d", "--debug"],
+        hidden = true,
+        names = ["-vv"],
         scope = ScopeType.INHERIT,
     )
-    var debug: Boolean = false
+    var vverbose: Boolean = false
+
+    @Option(
+        arity = "0",
+        hidden = true,
+        names = ["-vvv"],
+        scope = ScopeType.INHERIT,
+    )
+    var vvverbose: Boolean = false
 
     @Command(
         description = ["Generate an 8 character time code."],
+        mixinStandardHelpOptions = true,
         usageHelpAutoWidth = true,
     )
     fun tc8(
         @Option(
             converter = [UTCString::class],
             description = ["A UTC datetime to render as a time code.",
-                           "Defaults to present date and time."],
+                           "Defaults to present date and time.",],
             names = ["-u", "--utc-timestamp"],
         )
         timestamp: Instant?,

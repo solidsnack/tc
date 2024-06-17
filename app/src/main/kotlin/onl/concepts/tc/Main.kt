@@ -23,9 +23,16 @@ object Main {
         cmd.setExecutionStrategy {
             val app = cmd.getCommand<App>()
 
-            LogLevelControl.set(app.level)
-            if (app.debug) {
-                LogLevelControl.set(Release.application, Level.DEBUG)
+            LogLevelControl.set(Level.WARNING)
+
+            val verbosity = app.verbose.size +
+                (if (app.vverbose) 2 else 0) + (if (app.vvverbose) 3 else 0)
+
+            when (verbosity) {
+                0 -> { /* Do nothing. */ }
+                1 -> LogLevelControl.set(Release.application, Level.INFO)
+                2 -> LogLevelControl.set(Release.application, Level.DEBUG)
+                else -> LogLevelControl.set(Release.application, Level.TRACE)
             }
 
             logger.info {
