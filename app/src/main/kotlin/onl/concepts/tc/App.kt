@@ -1,19 +1,16 @@
 package onl.concepts.tc
 
-import java.lang.System.Logger.Level
 import java.util.concurrent.Callable
-import java.time.Instant
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import picocli.CommandLine.*
 import picocli.CommandLine.Model.CommandSpec
 
-import onl.concepts.tc.timecodes.TC8
-
 @Command(
     mixinStandardHelpOptions = true,
     usageHelpAutoWidth = true,
     versionProvider = Release.VersionProvider::class,
+    subcommands = [TC8::class]
 )
 class App : Callable<Int> {
     @Spec
@@ -25,8 +22,8 @@ class App : Callable<Int> {
 
     @Option(
         arity = "0",
-        description = ["With -v, print basic information.",
-                       "Pass up to three times for more information.",],
+        description = ["Describe what the program is doing.",
+                       "Pass up to three times for more detail.",],
         names = ["-v"],
         scope = ScopeType.INHERIT,
     )
@@ -48,38 +45,8 @@ class App : Callable<Int> {
     )
     var vvverbose: Boolean = false
 
-    @Command(
-        description = ["Generate an 8 character time code."],
-        mixinStandardHelpOptions = true,
-        usageHelpAutoWidth = true,
-    )
-    fun tc8(
-        @Option(
-            converter = [UTCString::class],
-            description = ["A UTC datetime to render as a time code.",
-                           "Defaults to present date and time.",],
-            names = ["-u", "--utc-timestamp"],
-        )
-        timestamp: Instant?,
-    ): Int {
-        val t = timestamp ?: Instant.now()
-        val tc = TC8.encode(TC8.Descriptor.of(t))
-        logger.info { "Translated $t to $tc" }
-        println("$tc")
-        return 0
-    }
-
     override fun call(): Int {
         spec.commandLine().usage(System.err)
         return 0
-    }
-
-    private class LogLevelString: ITypeConverter<Level> {
-        override fun convert(value: String?): Level
-            = Level.valueOf(value!!.uppercase())
-    }
-
-    private class UTCString: ITypeConverter<Instant> {
-        override fun convert(value: String?): Instant = Instant.parse(value)
     }
 }
