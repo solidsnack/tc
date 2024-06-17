@@ -1,4 +1,4 @@
-package onl.concepts.tc
+package onl.concepts.timecode
 
 import com.jcabi.manifests.Manifests
 import picocli.CommandLine.IVersionProvider

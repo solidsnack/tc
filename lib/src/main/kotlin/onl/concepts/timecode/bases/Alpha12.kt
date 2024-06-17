@@ -1,14 +1,11 @@
-package onl.concepts.tc.bases
+package onl.concepts.timecode.bases
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import onl.concepts.tc.TCErr
+import onl.concepts.timecode.TCErr
 
-/** No vowels (to prevent forming words and because `I` and `O` can be confused
- *  with numbers) and no `L` (because it is easily confused with numbers).
- */
-object Alpha20 {
-    private const val BASE = 20
-    private const val STRING = "BCDFGHJKLMNPQRSTVWXZ"
+object Alpha12 {
+    private const val BASE = 12
+    private const val STRING = "DFHKLNPRTVXZ"
     private val characters = STRING.toCharArray()
 
     /**

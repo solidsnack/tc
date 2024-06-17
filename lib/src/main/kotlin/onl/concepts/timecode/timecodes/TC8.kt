@@ -1,13 +1,13 @@
-package onl.concepts.tc.timecodes
+package onl.concepts.timecode.timecodes
 
 import java.time.Instant
 import java.time.ZonedDateTime
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 
-import onl.concepts.tc.Time
-import onl.concepts.tc.bases.Alpha20
-import onl.concepts.tc.bases.Alpha12
+import onl.concepts.timecode.Time
+import onl.concepts.timecode.bases.Alpha20
+import onl.concepts.timecode.bases.Alpha12
 
 
 /**

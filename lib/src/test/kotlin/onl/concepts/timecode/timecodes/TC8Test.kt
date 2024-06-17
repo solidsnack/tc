@@ -1,4 +1,4 @@
-package onl.concepts.tc.timecodes
+package onl.concepts.timecode.timecodes
 
 import java.time.Instant
 import java.time.ZonedDateTime
@@ -10,7 +10,7 @@ import net.jqwik.api.ForAll
 import net.jqwik.api.Property
 import net.jqwik.api.Provide
 
-import onl.concepts.tc.Time
+import onl.concepts.timecode.Time
 
 object TC8Test: SetupTest() {
     private val nov3 = // Generated for: 2022-11-05T13:31:32Z

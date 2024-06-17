@@ -1,4 +1,4 @@
-package onl.concepts.tc.timecodes
+package onl.concepts.timecode.timecodes
 
 open class SetupTest {
     init {

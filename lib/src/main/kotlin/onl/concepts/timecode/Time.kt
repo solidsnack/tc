@@ -1,4 +1,4 @@
-package onl.concepts.tc
+package onl.concepts.timecode
 
 import java.time.Duration
 import java.time.ZoneId
