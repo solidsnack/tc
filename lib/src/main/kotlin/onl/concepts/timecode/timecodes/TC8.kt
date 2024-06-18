@@ -33,6 +33,7 @@ data class TC8(
     companion object {
         private const val SECONDS: Long = 360
 
+        @JvmStatic
         fun of(t: Instant): TC8 {
             val utc = t.atZone(Time.utc)
             val year = utc.year
@@ -56,6 +57,7 @@ data class TC8(
             )
         }
 
+        @JvmStatic
         fun of(s: String): Result<TC8> = try {
             assert(s.length == 8) { "A TC8 descriptor is 8 characters." }
 
