@@ -3,14 +3,16 @@ package onl.concepts.timecode
 import java.util.concurrent.Callable
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import picocli.CommandLine
 import picocli.CommandLine.*
 import picocli.CommandLine.Model.CommandSpec
 
 @Command(
+    description = ["Utilities for timecodes."],
     mixinStandardHelpOptions = true,
     usageHelpAutoWidth = true,
     versionProvider = Release.VersionProvider::class,
-    subcommands = [TC8::class]
+    subcommands = [TC8App::class]
 )
 class App : Callable<Int> {
     @Spec
@@ -19,6 +21,9 @@ class App : Callable<Int> {
     companion object {
         private val logger = KotlinLogging.logger {}
     }
+
+//    @ArgGroup
+//    var timespec: Timespec? = null
 
     @Option(
         arity = "0",
@@ -46,7 +51,6 @@ class App : Callable<Int> {
     var vvverbose: Boolean = false
 
     override fun call(): Int {
-        spec.commandLine().usage(System.err)
-        return 0
+        return CommandLine(TC8App()).execute()
     }
 }

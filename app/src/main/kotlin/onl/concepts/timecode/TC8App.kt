@@ -9,31 +9,34 @@ import picocli.CommandLine.*
 import onl.concepts.timecode.timecodes.TC8
 
 @Command(
+    description = ["Subcommands for TC8 timecodes. With no subcommand, " +
+                   "generates a new TC8 timecode, with the same options " +
+                   "and behavior as the `encode` subcommand."],
     mixinStandardHelpOptions = true,
     name = "tc8",
     usageHelpAutoWidth = true,
 )
-class TC8 : Callable<Int> {
+class TC8App : Callable<Int> {
     @Spec
     lateinit var spec: Model.CommandSpec
+
+    @ArgGroup
+    var timespec: Timespec? = null
 
     companion object {
         private val logger = KotlinLogging.logger {}
     }
 
     @Command(
-        description = ["Generate a time code."],
+        description = ["Generate a timecode."],
         mixinStandardHelpOptions = true,
         usageHelpAutoWidth = true,
     )
     fun encode(
-        @Parameters(
-            arity = "0..1",
-            description = [],
-        )
-        timespec: String?,
+        @ArgGroup
+        timespec: Timespec?,
     ): Int {
-        val t = when (timespec) {
+        val t = when (timespec?.timespec) {
             null -> {
                 val t = Instant.now()
                 logger.info { "No timestamp provided; encoding `now`: $t" }
@@ -44,7 +47,11 @@ class TC8 : Callable<Int> {
                 logger.info { "User requested encoding of present time: $t" }
                 t
             }
-            else -> Instant.parse(timespec)
+            else -> {
+                // TODO: Try to parse with just minutes.
+                val s = timespec.timespec!!
+                Instant.parse(s)
+            }
         }
 
         println(TC8.of(t).code)
@@ -53,7 +60,8 @@ class TC8 : Callable<Int> {
     }
 
     @Command(
-        description = ["Decode a time code to get a time.",
+        description = ["Decode a timecode to get the notional time or time " +
+                       "interval.",
                        "Returns a UTC timestamp in ISO 8601 format, to " +
                        "seconds precision, of the midpoint of the interval " +
                        "covered by the timecode.",],
@@ -105,7 +113,6 @@ class TC8 : Callable<Int> {
     }
 
     override fun call(): Int {
-        spec.commandLine().usage(System.err)
-        return 0
+        return encode(timespec)
     }
 }
