@@ -1,9 +1,12 @@
 package onl.concepts.timecode
 
+import java.time.Instant
 import java.util.concurrent.Callable
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import picocli.CommandLine.*
+
+import onl.concepts.timecode.timecodes.TC8
 
 @Command(
     mixinStandardHelpOptions = true,
@@ -25,18 +28,35 @@ class TC8 : Callable<Int> {
     )
     fun encode(
         @Parameters(
+            arity = "0..1",
             description = [],
         )
-        timespec: String,
+        timespec: String?,
     ): Int {
+        val t = when (timespec) {
+            null -> {
+                val t = Instant.now()
+                logger.info { "No timestamp provided; encoding `now`: $t" }
+                t
+            }
+            "now" -> {
+                val t = Instant.now()
+                logger.info { "User requested encoding of present time: $t" }
+                t
+            }
+            else -> Instant.parse(timespec)
+        }
+
+        println(TC8.of(t).code)
+
         return 0
     }
 
     @Command(
         description = ["Decode a time code to get a time.",
                        "Returns a UTC timestamp in ISO 8601 format, to " +
-                       "seconds precision, of the first instant that falls " +
-                       "in the 6 minute window covered by the time code.",],
+                       "seconds precision, of the midpoint of the interval " +
+                       "covered by the timecode.",],
         mixinStandardHelpOptions = true,
         usageHelpAutoWidth = true,
     )
@@ -45,36 +65,23 @@ class TC8 : Callable<Int> {
             description = [],
         )
         timecode: String,
-        @ArgGroup(exclusive = true)
-        leap: ToLeapOrNotToLeap?,
-    ): Int {
-        val presentWith25thHour = leap?.let {
-            logger.debug { "-l? ${it.leap} -s? ${it.smoothed}" }
-            it.leap
-        } ?: false
-        return 0
-    }
-
-    class ToLeapOrNotToLeap {
         @Option(
-            description = [
-                "Decode in a time scale where leap seconds are smoothed ",
-                "(as in UTC-SLS) or collapsed (classic POSIX approach).",
-                "This is the default.",
-            ],
-            names = ["-s"],
-        ) var smoothed = false
-        @Option(
-            description = [
-                "Decode in a time scale where leap seconds may be ",
-                "inserted at the end of the day.",
-                "While a technically correct behavior for UTC, this is not",
-                "how time is implemented in many common computing systems.",
-                "The output may be unexpected."
-            ],
-            names = ["-l"]
+            defaultValue = "false",
+            description = ["Print the midpoint of the interval covered by " +
+                           "the code.",],
+            names = ["-m", "--midpoint"],
         )
-        var leap = false
+        midpoint: Boolean,
+    ): Int {
+        val parsed = TC8.of(timecode).getOrThrow()
+
+        if (midpoint) {
+            println("${parsed.midpoint}")
+        } else {
+            println("${parsed.summary}")
+        }
+
+        return 0
     }
 
     @Command(
@@ -90,6 +97,10 @@ class TC8 : Callable<Int> {
         )
         timecode: String,
     ): Int {
+        val parsed = TC8.of(timecode).getOrThrow()
+
+        for ((k, v) in parsed.describe()) println("$k: $v")
+
         return 0
     }
 

@@ -14,24 +14,24 @@ import onl.concepts.timecode.Time
 
 object TC8Test: SetupTest() {
     private val nov3 = // Generated for: 2022-11-05T13:31:32Z
-        Pair("2022XJKH", TC8.Descriptor(2022, 10, 2545))
+        Pair("2022XJKH", TC8(2022, 10, 2545))
 
     @Test
     fun simpleEncoding() {
-        val (expected, descriptor) = nov3
-        val encoded = TC8.encode(descriptor)
+        val (expected, tc) = nov3
+        val encoded = tc.code
 
         assertEquals(
             expected,
             encoded,
-            "Failed to encode: $descriptor (${descriptor.start()})",
+            "Failed to encode: $tc (${tc.summary})",
         )
     }
 
     @Test
     fun simpleDecoding() {
         val (encoded, expected) = nov3
-        val decoded = TC8.decode(encoded).getOrThrow()
+        val decoded = TC8.of(encoded).getOrThrow()
 
         assertEquals(
             expected,
@@ -41,21 +41,21 @@ object TC8Test: SetupTest() {
     }
 
     private val jan1 = // All values zero except year: 2019-01-01T00:00Z
-        Pair("2019DBBB", TC8.Descriptor(2019, 0, 0))
+        Pair("2019DBBB", TC8(2019, 0, 0))
 
     @Test
     fun encodeAndDecodeFirstDayOfYear() {
-        val (encoded, descriptor) = jan1
+        val (encoded, tc) = jan1
 
         assertEquals(
             encoded,
-            TC8.encode(descriptor),
-            "Failed to encode: $descriptor (${descriptor.start()})",
+            tc.code,
+            "Failed to encode: $tc (${tc.summary})",
         )
 
         assertEquals(
-            descriptor,
-            TC8.decode(encoded).getOrThrow(),
+            tc,
+            TC8.of(encoded).getOrThrow(),
             "Failed to decode: $encoded",
         )
     }
@@ -75,12 +75,12 @@ object TC8Test: SetupTest() {
     fun encodeAndDecodeLate90sAndEarly2000sUTCSLS(
         @ForAll("theLate90sAndEarly2000sUTCSLS") t: Instant
     ) {
-        val descriptor = TC8.Descriptor.of(t)
-        val encoded = TC8.encode(descriptor)
-        val decoded = TC8.decode(encoded).getOrThrow()
+        val descriptor = TC8.of(t)
+        val encoded = descriptor.code
+        val decoded = TC8.of(encoded).getOrThrow()
 
-        val start = descriptor.start()
-        val end = descriptor.end()
+        val start = descriptor.start
+        val end = descriptor.end
 
         assertEquals(descriptor, decoded, "Encoded $t to: $encoded")
         assertContains(
@@ -104,12 +104,12 @@ object TC8Test: SetupTest() {
     fun encodeAndDecode1900sAnd2000sUTCSLS(
         @ForAll("the1900sAnd2000sUTCSLS") t: Instant
     ) {
-        val descriptor = TC8.Descriptor.of(t)
-        val encoded = TC8.encode(descriptor)
-        val decoded = TC8.decode(encoded).getOrThrow()
+        val descriptor = TC8.of(t)
+        val encoded = descriptor.code
+        val decoded = TC8.of(encoded).getOrThrow()
 
-        val start = descriptor.start()
-        val end = descriptor.end()
+        val start = descriptor.start
+        val end = descriptor.end
 
         assertEquals(descriptor, decoded, "Encoded $t to: $encoded")
         assertContains(
@@ -141,13 +141,13 @@ object TC8Test: SetupTest() {
         @ForAll("innerMonth") month: Byte,
         @ForAll("innerTwentiethIndex") twentiethIndex: Short,
     ) {
-        val descriptor = TC8.Descriptor(year, month, twentiethIndex)
-        val encoded = TC8.encode(descriptor)
+        val descriptor = TC8(year, month, twentiethIndex)
+        val encoded = descriptor.code
         val lower = encoded.lowercase()
 
         assertEquals(
             descriptor,
-            TC8.decode(lower).getOrThrow(),
+            TC8.of(lower).getOrThrow(),
             "Decoding of upper ($encoded) and lower ($lower) case resulted " +
                 "in different values",
         )
@@ -181,7 +181,7 @@ object TC8Test: SetupTest() {
         @ForAll("invalidInnerTwentiethIndex") twentiethIndex: Short,
     ) {
         assertFails {
-            val d = TC8.Descriptor(year, month, twentiethIndex)
+            val d = TC8(year, month, twentiethIndex)
         }
     }
 }
