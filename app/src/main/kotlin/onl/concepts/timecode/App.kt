@@ -12,7 +12,7 @@ import picocli.CommandLine.Model.CommandSpec
     mixinStandardHelpOptions = true,
     usageHelpAutoWidth = true,
     versionProvider = Release.VersionProvider::class,
-    subcommands = [TC8App::class]
+    subcommands = [TC8App::class, TC10App::class]
 )
 class App : Callable<Int> {
     @Spec

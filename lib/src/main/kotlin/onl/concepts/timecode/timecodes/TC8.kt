@@ -8,6 +8,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import onl.concepts.timecode.Time
 import onl.concepts.timecode.bases.Alpha20
 import onl.concepts.timecode.bases.Alpha12
+import onl.concepts.timecode.util.flow
 
 /**
  *  TC8 Implementation.
@@ -42,13 +43,21 @@ data class TC8(
             val hour = utc.hour
             val minute = utc.minute
 
-            var indexOf10thOfHourIn32DayMonth = 0
-            // Beginning of day.
-            indexOf10thOfHourIn32DayMonth += 250 * dom
-            // Beginning of hour window.
-            indexOf10thOfHourIn32DayMonth += 10 * hour
-            // Beginning of six-minute window.
-            indexOf10thOfHourIn32DayMonth += minute / 6
+
+            val indexOf10thOfHourIn32DayMonth = run {
+                // Beginning of day.
+                val indexDueToDay = 250 * dom
+                // Beginning of hour window.
+                val indexDueToHour = indexDueToDay + (10 * hour)
+                // Beginning of six-minute window.
+                val indexDueToMinute = indexDueToHour + (minute / 6)
+                logger.debug {
+                    """Indexes while converting $t: with day $indexDueToDay,
+                       with hour $indexDueToHour, with $indexDueToMinute.
+                    """.flow()
+                }
+                indexDueToMinute
+            }
 
             return TC8(
                 year.toShort(),
@@ -67,7 +76,8 @@ data class TC8(
 
             val year = Integer.parseInt(yearText.toString())
             val month = monthText.fold(0, Alpha12::accumulate)
-            val indexOf10thOfHourIn32DayMonth = rest.fold(0, Alpha20::accumulate)
+            val indexOf10thOfHourIn32DayMonth
+                = rest.fold(0, Alpha20::accumulate)
 
             Result.success(
                 TC8(
@@ -89,8 +99,8 @@ data class TC8(
         val (remSM, digit5) = Alpha12.nibble(month.toInt())
 
         assert(remSM == 0) {
-            "There should be nothing left after translating the " +
-                "month to base 12."
+            """There should be nothing left after translating the
+               month to base 12.""".flow()
         }
 
         val i = indexOf10thOfHourIn32DayMonth.toInt()
@@ -99,8 +109,8 @@ data class TC8(
         val (remDH3, digit6) = Alpha20.nibble(remDH2)
 
         assert(remDH3 == 0) {
-            "There should be nothing left after translating the " +
-                "index of the twentieth part to base 20."
+            """There should be nothing left after translating the
+               index of the twentieth part to base 20.""".flow()
         }
 
         "$digits1234$digit5$digit6$digit7$digit8"
