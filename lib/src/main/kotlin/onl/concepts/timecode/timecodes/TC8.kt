@@ -106,16 +106,22 @@ data class TC8(
         "$digits1234$digit5$digit6$digit7$digit8"
    }
 
-    override val start: Instant
-        get() = startZ.toInstant()
+    override val start: Instant by lazy {
+        startZoned().toInstant()
+    }
 
-    override val end: Instant
-        get() = endZ.toInstant()
+    override val end: Instant by lazy {
+        // Adding a fixed number of seconds is correct because leap seconds
+        // are always smoothed or collapsed in the timescale underlying
+        // `java.time.*` classes.
+        start.plusSeconds(SECONDS)
+    }
+
     override val summary: String
         get() = Time.representInterval(start, end)
 
     override val midpoint: Instant
-        get() = startZ.plusSeconds(SECONDS / 2).toInstant()
+        get() = start.plusSeconds(SECONDS / 2)
 
     override fun describe(): Map<String, String> {
         val (day, hour, minute) = dayAndTimeAsEncoded()
@@ -141,7 +147,7 @@ data class TC8(
         return Triple(day, hour, minute)
     }
 
-    private val startZ: ZonedDateTime by lazy {
+    private fun startZoned(): ZonedDateTime {
         var (day, hour, minute) = dayAndTimeAsEncoded()
 
         // NB: Maps leap second / leap hour to last hour.
@@ -150,7 +156,7 @@ data class TC8(
             minute = 54
         }
 
-        ZonedDateTime.of(
+        return ZonedDateTime.of(
             year.toInt(),
             month + 1,
             day + 1,
@@ -161,9 +167,4 @@ data class TC8(
             Time.utc,
         )
     }
-
-    // Adding a fixed number of seconds is correct because leap seconds
-    // are always smoothed or collapsed in the timescale underlying
-    // `java.time.*` classes.
-    private val endZ: ZonedDateTime by lazy { startZ.plusSeconds (SECONDS) }
 }
