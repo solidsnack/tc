@@ -4,6 +4,7 @@ import java.time.Instant
 import java.time.Year
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.temporal.ChronoField
 
 object Time {
     val utc: ZoneId = ZoneId.of("UTC")
@@ -30,7 +31,6 @@ object Time {
         val zStr = "$z".trimEnd('Z')
         val aZoned = a.atZone(utc)
         val zZoned = z.atZone(utc)
-        var zStart = 0
 
         val (aEnd, zEnd) = run {
             val hasSeconds =
@@ -44,14 +44,29 @@ object Time {
             }
         }
 
-        if (zZoned.year == aZoned.year) zStart += 5
-
-        if (
-            zZoned.monthValue == aZoned.monthValue &&
-            zZoned.dayOfMonth == aZoned.dayOfMonth
-        ) zStart += 6
+        val zStart = indexOfDiffGroup(aZoned, zZoned)
 
         return "${aStr.substring(0, aEnd)}Z/${zStr.substring(zStart, zEnd)}Z"
+    }
+
+    private fun indexOfDiffGroup(a: ZonedDateTime, z: ZonedDateTime): Int {
+        var index = 0
+
+        if (a.year != z.year) return index
+
+        index += 5
+
+        if (a.monthValue != z.monthValue) return index
+        if (a.dayOfMonth != z.dayOfMonth) return index
+
+        index += 6
+
+        if (a.hour != z.hour) return index
+        if (a.minute != z.minute) return index
+
+        index += 6
+
+        return index
     }
 
     inline
