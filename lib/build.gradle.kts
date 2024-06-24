@@ -6,6 +6,8 @@ plugins {
     `java-library`
 }
 
+group = "${project(":").group}.${project(":").name}"
+
 repositories {
     mavenCentral()
 }

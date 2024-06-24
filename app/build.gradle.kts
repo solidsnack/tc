@@ -8,6 +8,8 @@ repositories {
     mavenCentral()
 }
 
+group = "${project(":").group}.${project(":").name}"
+
 dependencies {
     implementation("com.jcabi:jcabi-manifests:1.+")
     kapt("info.picocli:picocli-codegen:4.+")
