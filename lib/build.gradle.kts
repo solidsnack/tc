@@ -3,7 +3,10 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     kotlin("jvm")
+    `java-library`
 }
+
+group = "${project(":").group}.${project(":").name}"
 
 repositories {
     mavenCentral()
@@ -20,6 +23,10 @@ dependencies {
     testImplementation("org.apache.logging.log4j:log4j-core:2.+")
     testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.+")
     testImplementation("org.slf4j:slf4j-api:2.+")
+}
+
+java {
+    withSourcesJar()
 }
 
 kotlin {
