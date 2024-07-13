@@ -69,23 +69,19 @@ object Time {
         return index
     }
 
-    inline
     fun firstDayOfYear(year: Year): ZonedDateTime {
         return ZonedDateTime.of(year.value, 1, 1, 0, 0, 0, 0, utc)
     }
 
-    inline
     fun firstDayOfYear(t: Instant): ZonedDateTime {
         val year = t.atZone(utc).year
         return firstDayOfYear(Year.of(year))
     }
 
-    inline
     fun lastDayOfYear(year: Year): ZonedDateTime {
         return ZonedDateTime.of(year.value, 12, 31, 0, 0, 0, 0, utc)
     }
 
-    inline
     fun lastDayOfYear(t: Instant): ZonedDateTime {
         val year = t.atZone(utc).year
         return lastDayOfYear(Year.of(year))
