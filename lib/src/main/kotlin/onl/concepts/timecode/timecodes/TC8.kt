@@ -14,19 +14,19 @@ import onl.concepts.timecode.util.flow
  *  TC8 Implementation.
  */
 data class TC8(
-        /** Year, starting from 0. So 2023 is 2023 and so on. */
-        val year: Short,
-        /** Month starting from 0. The first month is 0, the second
-         *  is 1, and so on. */
-        val month: Byte,
-        /** The day and 2-hour window and tenth part of the hour within the
-         *  month in a combined format. */
-        val indexOf10thOfHourIn32DayMonth: Short,
+    /** Year, starting from 0. So 2023 is 2023 and so on. */
+    val year: Short,
+    /** Half month starting from 0. The first month is 0 and then 1, the second
+      *  is 1, and so on. */
+    val halfMonth: Byte,
+    /** The day and 2-hour window and tenth part of the hour within the
+      *  month in a combined format. */
+    val indexOf10thOfHourIn16DayHalfMonth: Short,
 ) : TimeCode {
     init {
         assert(year in 0..9999) { "Year must be: [0,9999]" }
-        assert(month in 0..11) { "Month must be: [0,11]" }
-        assert(indexOf10thOfHourIn32DayMonth in 0..7999) {
+        assert(halfMonth in 0..23) { "Half month must be: [0,23]" }
+        assert(indexOf10thOfHourIn16DayHalfMonth in 0..7999) {
             "Index must be: [0,7999]"
         }
     }
@@ -96,14 +96,14 @@ data class TC8(
     override val code: String by lazy {
         val digits1234 = String.format("%04d", year)
 
-        val (remSM, digit5) = Alpha12.nibble(month.toInt())
+        val (remSM, digit5) = Alpha12.nibble(halfMonth.toInt())
 
         assert(remSM == 0) {
             """There should be nothing left after translating the
                month to base 12.""".flow()
         }
 
-        val i = indexOf10thOfHourIn32DayMonth.toInt()
+        val i = indexOf10thOfHourIn16DayHalfMonth.toInt()
         val (remDH1, digit8) = Alpha20.nibble(i)
         val (remDH2, digit7) = Alpha20.nibble(remDH1)
         val (remDH3, digit6) = Alpha20.nibble(remDH2)
@@ -140,7 +140,7 @@ data class TC8(
             "code" to code,
             "summary" to summary,
             "encoded-year" to String.format("%04d", year),
-            "encoded-month" to String.format("%02d", month + 1),
+            "encoded-month" to String.format("%02d", halfMonth + 1),
             "encoded-day" to String.format("%02d", day + 1),
             "encoded-hour" to String.format("%02d", hour),
             "encoded-minute" to String.format("%02d", minute),
@@ -148,9 +148,9 @@ data class TC8(
     }
 
     private fun dayAndTimeAsEncoded(): Triple<Int, Int, Int> {
-        val indexIn25HourDay = indexOf10thOfHourIn32DayMonth % 250
+        val indexIn25HourDay = indexOf10thOfHourIn16DayHalfMonth % 250
 
-        val day = indexOf10thOfHourIn32DayMonth / 250
+        val day = indexOf10thOfHourIn16DayHalfMonth / 250
         val hour = indexIn25HourDay / 10
         val minute = (indexIn25HourDay % 10) * 6
 
@@ -168,7 +168,7 @@ data class TC8(
 
         return ZonedDateTime.of(
             year.toInt(),
-            month + 1,
+            halfMonth + 1,
             day + 1,
             hour,
             minute,
