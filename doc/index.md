@@ -7,12 +7,15 @@ other items were part of the identifier incorporates a date and time.
 - TC8 - `YYYY<alpha12><alpha20><alpha20><alpha20>`
   - Represents a window of 6 minutes in UTC.
   - Calendared: The same date and time will have the same
-    encoding from year to year, even in leap years.
+    encoding from year to year, even in leap years. This means there are
+    discontinuities. Several days worth of codes are skipped at the end of
+    every February.
   - Intervals of 6 minutes fit wholly within one hour or another in all
     timezones that are whole or half-hour offsets from UTC.
 - TC10 - `YYYY<alpha20><alpha20><alpha20><alpha20><alpha20><base10>`
   - Represents a window of 1 second.
-  - A monotonic count of seconds since the beginning of the year.
+  - A continuous count of seconds since the beginning of the year, and
+    therefore not calendared.
 
 ## Representation of Intervals
 
