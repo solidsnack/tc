@@ -2,7 +2,7 @@
 
 The TCn Timecodes are a compact way to assign sortable identifiers to points in
 time. This is of use for release tags, lot numbers, purchase orders and
-other items were part of the identifier incorporates a date and time.
+other items where part of the identifier incorporates a date and time.
 
 - TC8 - `YYYY<alpha12><alpha20><alpha20><alpha20>`
   - Represents a window of 6 minutes in UTC.
