@@ -20,7 +20,7 @@ time within the year:
 - TC8: `2019VGGY`
 - TCX: `2019VGGYH0`
 
-The codes can extended to subsecond precision (see "Variations", below) by
+The codes can be extended to subsecond precision (see "Variations", below) by
 adding a `.` and subseconds to TCX.
 
 The letters allowed in each place were chosen in an iterative way to avoid
@@ -73,10 +73,10 @@ The half month is written in P5, from `A` for the first half of January to
 
 The time since the start of the half month is counted in whole seconds and
 divided into blocks of 200 seconds, numbered from 0. The block is written in
-P6 to P8, as three digits in base 19, which allows 6,859 blocks.
+P6 to P8, as three digits in base 19, which allows 6859 blocks.
 
-A half month has room for 15.5 days, or 6,696 blocks, so blocks 6,696 to
-6,858 are left over. The second half month is shorter in months of fewer
+A half month has room for 15.5 days, or 6696 blocks, so blocks 6696 to
+6858 are left over. The second half month is shorter in months of fewer
 than 31 days, which leave its last blocks unused. So a day and time of the
 month always falls in the same block, in every month of every year.
 
@@ -92,9 +92,7 @@ of block 6,696, which is otherwise unused: the leap second at the end of 2016
 is `2016ZZNMB0`, just after `2016ZZNLZ9` for 23:59:59. In a shorter month, it
 is the second that would be 00:00:00 on the day after the last, which the
 month otherwise leaves unused. The next half month counts from 0 again, so a
-leap second never changes the code of a later time. `Temporal.Instant` does
-not count leap seconds, so the calculation below gives 23:59:60 the code of
-23:59:59.
+leap second never changes the code of a later time.
 
 #### The Second Within the Block
 
@@ -103,7 +101,7 @@ of seconds in P9, in base 20, and the seconds in PX, in decimal. A TCX may be
 followed by `.` and decimal digits for a fraction of the second, as in
 `2026VDJBD5.25`. Codes with fractions still sort in time order.
 
-### Calculating a Timecode
+### Calculating a TimeCode
 
 The calculation is presented in terms of a `Temporal.Instant`, as specified
 by the TC39 Temporal proposal (<https://tc39.es/proposal-temporal/docs/>).
@@ -171,7 +169,7 @@ function timecode(t: Temporal.Instant, digits?: number): string {
             continue
         }
 
-        if (nanoseconds > 0) {
+        if (digits || nanoseconds > 0) {
             accum += "." + `${nanoseconds}`.padStart(9, "0")
         } else {
             accum += ".0"
@@ -186,7 +184,7 @@ function timecode(t: Temporal.Instant, digits?: number): string {
 
 ## TC5
 
-The TC5 timecode is a representation of a time in UTC to a granularity of one
+The TC5 TimeCode is a representation of a time in UTC to a granularity of one
 half month. It comprises places P1 through P5: the year and the half month.
 
 | UTC                    | TC5     |
@@ -202,7 +200,7 @@ Using the program shown earlier, TC5 codes can be produced by calling
 
 ## TC8
 
-The TC8 timecode is a representation of a time in UTC to a granularity of one
+The TC8 TimeCode is a representation of a time in UTC to a granularity of one
 block of 200 seconds. It comprises places P1 through P8: the year, the half
 month and the block of 200 seconds.
 
@@ -219,7 +217,7 @@ Using the program shown earlier, TC8 codes can be produced by calling
 
 ## TCX
 
-The TCX timecode is a representation of a time in UTC to a granularity of one
+The TCX TimeCode is a representation of a time in UTC to a granularity of one
 second. It comprises places P1 through PX: the year, the half month, the
 block of 200 seconds and the second within the block.
 
@@ -237,14 +235,16 @@ Using the program shown earlier, TCX codes can be produced by calling
 ## Variations
 
 By keeping fractional seconds or clipping the codes described above, we have,
-informally, codes ranging from TC4 (just the year) to TC20 (nanoseconds
-precision):
+informally, codes ranging from TC4 (just the year) to TC20 (nanoseconds):
 
 - RFC 3339: `2019-10-19T05:20:50.992615967Z`
 - TC4: `2019`
 - TC5: `2019V`
 - TC6: `2019VG`
 - ...
-- TC14: `2019VGGYH0.992`
+- TC11: (Doesn't really make sense -- the example code formats it like TC12.)
+- TC12: `2019VGGYH0.9`
+- ...
+- TC16: `2019VGGYH0.99261`
 - ...
 - TC20: `2019VGGYH0.992615967`
