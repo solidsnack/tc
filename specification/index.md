@@ -248,3 +248,95 @@ informally, codes ranging from TC4 (just the year) to TC20 (nanoseconds):
 - TC16: `2019VGGYH0.99261`
 - ...
 - TC20: `2019VGGYH0.992615967`
+
+## Parsing a TimeCode
+
+A TimeCode of any length, from TC4 to a TCX with a fraction of the second,
+stands for the start of the time it covers, so places that are not present
+count as 0. For example, `2026V` stands for `2026-10-16T12:00:00Z`, and
+`2026VDJBD` for `2026-10-17T14:23:40Z`.
+
+A `Temporal.Instant` has no leap seconds, so the program below reads a leap
+second, like any code past the end of its half month, as the last second of
+the half month. Temporal does the same with 23:59:60: `2016ZZNMB0` is read
+as `2016-12-31T23:59:59Z`, the same as `2016ZZNLZ9`.
+
+```ts
+function parseTimecode(code: string): Temporal.Instant {
+    const decimal: string = "0123456789"
+    const p5: string = "ABCDEFGHIJKLOPQRSTUVWXYZ"
+    const p6: string = "BDFGHJKLMPQRSTVWXYZ"
+    const p7: string = "BCDFGHJKLMNPQRVWXYZ"
+    const p8: string = "BCDFGHJLMNPQRSVWXYZ"
+    const p9: string = "BCDEFHIJLMNOPQUVWXYZ"
+
+    const [places, fraction, ...extra] = code.split(".")
+
+    if (places.length < 4 || places.length > 10) {
+        throw new RangeError("TimeCodes have from 4 to 10 places.")
+    }
+
+    if (fraction !== undefined && (places.length < 10 || extra.length > 0 ||
+        !/^[0-9]{1,9}$/.test(fraction))) {
+        throw new RangeError(
+            "Only a TCX may have a fraction, of 1 to 9 decimal digits.")
+    }
+
+    // The digit a place stands for. Places that are not present count as 0.
+    const digit = (chars: string, i: number): number => {
+        if (i >= places.length) {
+            return 0
+        }
+
+        const n = chars.indexOf(places[i])
+
+        if (n < 0) {
+            const place = i < 9 ? `P${i + 1}` : "PX"
+            throw new RangeError(`${places[i]} is not allowed in ${place}.`)
+        }
+
+        return n
+    }
+
+    // First, the four components: year, half-month, block and seconds.
+
+    const year = (1000 * digit(decimal, 0)) + (100 * digit(decimal, 1)) +
+        (10 * digit(decimal, 2)) + digit(decimal, 3)
+    const halfMonth = digit(p5, 4)
+    const block = (19 * 19 * digit(p6, 5)) + (19 * digit(p7, 6)) +
+        digit(p8, 7)
+    const second = (10 * digit(p9, 8)) + digit(decimal, 9)
+    const nanoseconds = fraction === undefined ? 0 :
+        Number(fraction.padEnd(9, "0"))
+
+    // The start of the second half month in seconds. 372 hours is 15.5 days.
+    const hm2Begin = 372 * 3600
+
+    const wholeMonth = Math.floor(halfMonth / 2)
+    const isSecondHalf = halfMonth % 2 === 1
+
+    const mBegin: Temporal.ZonedDateTime = Temporal.ZonedDateTime.from({
+        year: year,
+        month: wholeMonth + 1,
+        day: 1,
+        timeZone: "UTC",
+    })
+
+    // The second half month ends with the month, so it is shorter in months
+    // of fewer than 31 days.
+    const hmBegin = isSecondHalf ? hm2Begin : 0
+    const hmLength = isSecondHalf ?
+        (mBegin.daysInMonth * 24 * 3600) - hm2Begin : hm2Begin
+
+    const locInHalfMonth = (block * 200) + second
+
+    // Codes past the end of the half month, like those of leap seconds, are
+    // clipped to its last second. Temporal does the same with 23:59:60.
+    const locInMonth = hmBegin + Math.min(locInHalfMonth, hmLength - 1)
+
+    return mBegin.toInstant().add({
+        seconds: locInMonth,
+        nanoseconds: nanoseconds,
+    })
+}
+```
