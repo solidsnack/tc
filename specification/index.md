@@ -115,7 +115,8 @@ function timecode(t: Temporal.Instant, digits?: number): string {
     const p9: string = 'BCDEFHIJLMNOPQUVWXYZ'
 
     const utc: Temporal.ZonedDateTime = t.toZonedDateTimeISO('UTC')
-    const nanoseconds = (utc.millisecond * 1e6) + (utc.microsecond * 1e3) +
+    const nanoseconds = (utc.millisecond * 1e6) +
+        (utc.microsecond * 1e3) +
         utc.nanosecond
     const year = utc.year
 
@@ -306,10 +307,13 @@ function parseTimecode(code: string): Temporal.Instant {
 
     // First, the four components: year, half-month, block and seconds.
 
-    const year = (1000 * digit(decimal, 0)) + (100 * digit(decimal, 1)) +
-        (10 * digit(decimal, 2)) + digit(decimal, 3)
+    const year = (1000 * digit(decimal, 0)) +
+        (100 * digit(decimal, 1)) +
+        (10 * digit(decimal, 2)) +
+        digit(decimal, 3)
     const halfMonth = digit(p5, 4)
-    const block = (19 * 19 * digit(p6, 5)) + (19 * digit(p7, 6)) +
+    const block = (19 * 19 * digit(p6, 5)) +
+        (19 * digit(p7, 6)) +
         digit(p8, 7)
     const second = (10 * digit(p9, 8)) + digit(decimal, 9)
     const nanoseconds = fraction === undefined

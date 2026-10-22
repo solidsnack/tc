@@ -12,11 +12,12 @@ Source code should generally be formatted:
 In languages where either single quotes or double quotes can be used for
 strings, prefer single quotes.
 
+In languages where terminal semicolons are allowed but optional, the code
+should be structured to avoid terminal semicolons.
+
 ### TS
 
 1. TypeScript should be formatted without terminal semicolons.
-2. Always apply the formatter -- `deno fmt` -- after doing any coding and
-   review the output for clarity.
 
 ### SQL
 
