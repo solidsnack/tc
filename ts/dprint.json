@@ -1,0 +1,39 @@
+{
+    "lineWidth": 79,
+    "indentWidth": 4,
+    "useTabs": false,
+    "newLineKind": "lf",
+    "typescript": {
+        "quoteStyle": "preferSingle",
+        "semiColons": "asi",
+        "nextControlFlowPosition": "sameLine",
+        "bracePosition": "sameLine",
+        "binaryExpression.operatorPosition": "sameLine",
+        "conditionalExpression.operatorPosition": "nextLine",
+        "conditionalExpression.preferSingleLine": true,
+        "conditionalType.operatorPosition": "nextLine",
+        "arrowFunction.useParentheses": "force",
+        "commentLine.forceSpaceAfterSlashes": false,
+        "constructSignature.spaceAfterNewKeyword": true,
+        "constructorType.spaceAfterNewKeyword": true,
+        "functionExpression.spaceAfterFunctionKeyword": true,
+        "taggedTemplate.spaceBeforeLiteral": false,
+        "module.sortImportDeclarations": "maintain",
+        "module.sortExportDeclarations": "maintain",
+        "importDeclaration.sortNamedImports": "maintain",
+        "exportDeclaration.sortNamedExports": "maintain"
+    },
+    "markdown": {
+        "textWrap": "maintain"
+    },
+    "json": {
+        "packageJson.applyConventions": false
+    },
+    "includes": ["src/**/*.ts", "test/**/*.ts", "*.md", "*.json"],
+    "excludes": ["node_modules", "dist", "build", "package-lock.json"],
+    "plugins": [
+        "./node_modules/@dprint/typescript/plugin.wasm",
+        "./node_modules/@dprint/markdown/plugin.wasm",
+        "./node_modules/@dprint/json/plugin.wasm"
+    ]
+}

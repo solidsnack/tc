@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target": "es2023",
+        "lib": ["es2023", "esnext.temporal"],
+        "types": ["node"],
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitOverride": true,
+        "noFallthroughCasesInSwitch": true,
+        "verbatimModuleSyntax": true,
+        "erasableSyntaxOnly": true,
+        "skipLibCheck": true,
+        "sourceMap": true,
+        "rootDir": ".",
+        "outDir": "build"
+    },
+    "include": ["src", "test"]
+}
