@@ -17,534 +17,534 @@
 # implementations cannot represent.
 
 tc5:
-  decode:
-    # Every half month of a year: the first starts on the 1st, the second
-    # at 12:00 on the 16th.
-    - input: "2026A"
-      output: "2026-01-01T00:00:00Z"
-    - input: "2026B"
-      output: "2026-01-16T12:00:00Z"
-    - input: "2026C"
-      output: "2026-02-01T00:00:00Z"
-    - input: "2026D"
-      output: "2026-02-16T12:00:00Z"
-    - input: "2026E"
-      output: "2026-03-01T00:00:00Z"
-    - input: "2026F"
-      output: "2026-03-16T12:00:00Z"
-    - input: "2026G"
-      output: "2026-04-01T00:00:00Z"
-    - input: "2026H"
-      output: "2026-04-16T12:00:00Z"
-    - input: "2026I"
-      output: "2026-05-01T00:00:00Z"
-    - input: "2026J"
-      output: "2026-05-16T12:00:00Z"
-    - input: "2026K"
-      output: "2026-06-01T00:00:00Z"
-    - input: "2026L"
-      output: "2026-06-16T12:00:00Z"
-    - input: "2026O"
-      output: "2026-07-01T00:00:00Z"
-    - input: "2026P"
-      output: "2026-07-16T12:00:00Z"
-    - input: "2026Q"
-      output: "2026-08-01T00:00:00Z"
-    - input: "2026R"
-      output: "2026-08-16T12:00:00Z"
-    - input: "2026S"
-      output: "2026-09-01T00:00:00Z"
-    - input: "2026T"
-      output: "2026-09-16T12:00:00Z"
-    - input: "2026U"
-      output: "2026-10-01T00:00:00Z"
-    - input: "2026V"
-      output: "2026-10-16T12:00:00Z"
-    - input: "2026W"
-      output: "2026-11-01T00:00:00Z"
-    - input: "2026X"
-      output: "2026-11-16T12:00:00Z"
-    - input: "2026Y"
-      output: "2026-12-01T00:00:00Z"
-    - input: "2026Z"
-      output: "2026-12-16T12:00:00Z"
-    # Spec examples.
-    - input: "1969P"
-      output: "1969-07-16T12:00:00Z"
-    - input: "2000A"
-      output: "2000-01-01T00:00:00Z"
-    # Leap years do not move the half months.
-    - input: "2024D"
-      output: "2024-02-16T12:00:00Z"
-    - input: "2024E"
-      output: "2024-03-01T00:00:00Z"
-    - input: "1900E"
-      output: "1900-03-01T00:00:00Z"
-    - input: "2000E"
-      output: "2000-03-01T00:00:00Z"
-    # The first and last years.
-    - input: "0000A"
-      output: "0000-01-01T00:00:00Z"
-    - input: "0042K"
-      output: "0042-06-01T00:00:00Z"
-    - input: "9999Z"
-      output: "9999-12-16T12:00:00Z"
-  encode:
-    # Spec examples.
-    - input: "1969-07-20T20:17:40Z"
-      output: "1969P"
-    - input: "2000-01-01T00:00:00Z"
-      output: "2000A"
-    - input: "2026-10-16T11:59:59Z"
-      output: "2026U"
-    - input: "2026-10-16T12:00:00Z"
-      output: "2026V"
-    - input: "2026-10-17T14:23:45Z"
-      output: "2026V"
-    # Codes are truncated, never rounded.
-    - input: "2026-10-16T11:59:59.999999999Z"
-      output: "2026U"
-    - input: "2026-12-31T23:59:59.999999999Z"
-      output: "2026Z"
-    - input: "2027-01-01T00:00:00Z"
-      output: "2027A"
-    # Leap years: February 29th is in the second half of February.
-    - input: "2024-02-16T11:59:59Z"
-      output: "2024C"
-    - input: "2024-02-16T12:00:00Z"
-      output: "2024D"
-    - input: "2024-02-29T00:00:00Z"
-      output: "2024D"
-    - input: "2024-02-29T23:59:59Z"
-      output: "2024D"
-    - input: "2024-03-01T00:00:00Z"
-      output: "2024E"
-    - input: "2000-02-29T12:00:00Z"
-      output: "2000D"
-    - input: "2100-02-28T23:59:59Z"
-      output: "2100D"
-    - input: "2100-03-01T00:00:00Z"
-      output: "2100E"
-    # The first and last years.
-    - input: "0000-01-01T00:00:00Z"
-      output: "0000A"
-    - input: "0042-06-15T00:00:00Z"
-      output: "0042K"
-    - input: "9999-12-31T23:59:59.999999999Z"
-      output: "9999Z"
+    decode:
+        # Every half month of a year: the first starts on the 1st, the second
+        # at 12:00 on the 16th.
+        - input: '2026A'
+          output: '2026-01-01T00:00:00Z'
+        - input: '2026B'
+          output: '2026-01-16T12:00:00Z'
+        - input: '2026C'
+          output: '2026-02-01T00:00:00Z'
+        - input: '2026D'
+          output: '2026-02-16T12:00:00Z'
+        - input: '2026E'
+          output: '2026-03-01T00:00:00Z'
+        - input: '2026F'
+          output: '2026-03-16T12:00:00Z'
+        - input: '2026G'
+          output: '2026-04-01T00:00:00Z'
+        - input: '2026H'
+          output: '2026-04-16T12:00:00Z'
+        - input: '2026I'
+          output: '2026-05-01T00:00:00Z'
+        - input: '2026J'
+          output: '2026-05-16T12:00:00Z'
+        - input: '2026K'
+          output: '2026-06-01T00:00:00Z'
+        - input: '2026L'
+          output: '2026-06-16T12:00:00Z'
+        - input: '2026O'
+          output: '2026-07-01T00:00:00Z'
+        - input: '2026P'
+          output: '2026-07-16T12:00:00Z'
+        - input: '2026Q'
+          output: '2026-08-01T00:00:00Z'
+        - input: '2026R'
+          output: '2026-08-16T12:00:00Z'
+        - input: '2026S'
+          output: '2026-09-01T00:00:00Z'
+        - input: '2026T'
+          output: '2026-09-16T12:00:00Z'
+        - input: '2026U'
+          output: '2026-10-01T00:00:00Z'
+        - input: '2026V'
+          output: '2026-10-16T12:00:00Z'
+        - input: '2026W'
+          output: '2026-11-01T00:00:00Z'
+        - input: '2026X'
+          output: '2026-11-16T12:00:00Z'
+        - input: '2026Y'
+          output: '2026-12-01T00:00:00Z'
+        - input: '2026Z'
+          output: '2026-12-16T12:00:00Z'
+        # Spec examples.
+        - input: '1969P'
+          output: '1969-07-16T12:00:00Z'
+        - input: '2000A'
+          output: '2000-01-01T00:00:00Z'
+        # Leap years do not move the half months.
+        - input: '2024D'
+          output: '2024-02-16T12:00:00Z'
+        - input: '2024E'
+          output: '2024-03-01T00:00:00Z'
+        - input: '1900E'
+          output: '1900-03-01T00:00:00Z'
+        - input: '2000E'
+          output: '2000-03-01T00:00:00Z'
+        # The first and last years.
+        - input: '0000A'
+          output: '0000-01-01T00:00:00Z'
+        - input: '0042K'
+          output: '0042-06-01T00:00:00Z'
+        - input: '9999Z'
+          output: '9999-12-16T12:00:00Z'
+    encode:
+        # Spec examples.
+        - input: '1969-07-20T20:17:40Z'
+          output: '1969P'
+        - input: '2000-01-01T00:00:00Z'
+          output: '2000A'
+        - input: '2026-10-16T11:59:59Z'
+          output: '2026U'
+        - input: '2026-10-16T12:00:00Z'
+          output: '2026V'
+        - input: '2026-10-17T14:23:45Z'
+          output: '2026V'
+        # Codes are truncated, never rounded.
+        - input: '2026-10-16T11:59:59.999999999Z'
+          output: '2026U'
+        - input: '2026-12-31T23:59:59.999999999Z'
+          output: '2026Z'
+        - input: '2027-01-01T00:00:00Z'
+          output: '2027A'
+        # Leap years: February 29th is in the second half of February.
+        - input: '2024-02-16T11:59:59Z'
+          output: '2024C'
+        - input: '2024-02-16T12:00:00Z'
+          output: '2024D'
+        - input: '2024-02-29T00:00:00Z'
+          output: '2024D'
+        - input: '2024-02-29T23:59:59Z'
+          output: '2024D'
+        - input: '2024-03-01T00:00:00Z'
+          output: '2024E'
+        - input: '2000-02-29T12:00:00Z'
+          output: '2000D'
+        - input: '2100-02-28T23:59:59Z'
+          output: '2100D'
+        - input: '2100-03-01T00:00:00Z'
+          output: '2100E'
+        # The first and last years.
+        - input: '0000-01-01T00:00:00Z'
+          output: '0000A'
+        - input: '0042-06-15T00:00:00Z'
+          output: '0042K'
+        - input: '9999-12-31T23:59:59.999999999Z'
+          output: '9999Z'
 
 tc8:
-  decode:
-    # Spec examples.
-    - input: "1969PJFW"
-      output: "1969-07-20T20:16:40Z"
-    - input: "2000ABBB"
-      output: "2000-01-01T00:00:00Z"
-    - input: "2026UZNL"
-      output: "2026-10-16T11:56:40Z"
-    - input: "2026VBBB"
-      output: "2026-10-16T12:00:00Z"
-    - input: "2026VDJB"
-      output: "2026-10-17T14:23:20Z"
-    # Blocks of 200 seconds; P8 carries into P7, and P7 into P6.
-    - input: "2000ABBC"
-      output: "2000-01-01T00:03:20Z"
-    - input: "2000ABBZ"
-      output: "2000-01-01T01:00:00Z"
-    - input: "2000ABCB"
-      output: "2000-01-01T01:03:20Z"
-    - input: "2000ABZZ"
-      output: "2000-01-01T20:00:00Z"
-    - input: "2000ADBB"
-      output: "2000-01-01T20:03:20Z"
-    # The last block of each kind of half month.
-    - input: "2026AZNL"
-      output: "2026-01-16T11:56:40Z"
-    - input: "2026DVZF"
-      output: "2026-02-28T23:56:40Z"
-    - input: "2024DXDY"
-      output: "2024-02-29T23:56:40Z"
-    - input: "2026LYJR"
-      output: "2026-06-30T23:56:40Z"
-    - input: "2026ZZNL"
-      output: "2026-12-31T23:56:40Z"
-    # A day and time of the month has the same block in every month.
-    - input: "2024DWNQ"
-      output: "2024-02-29T12:00:00Z"
-    - input: "2026FWNQ"
-      output: "2026-03-29T12:00:00Z"
-    - input: "2026HWNQ"
-      output: "2026-04-29T12:00:00Z"
-    - input: "0000DWNQ"
-      output: "0000-02-29T12:00:00Z"
-    # The first and last years.
-    - input: "0000ABBB"
-      output: "0000-01-01T00:00:00Z"
-    - input: "9999ZZNL"
-      output: "9999-12-31T23:56:40Z"
-  encode:
-    # Spec examples.
-    - input: "1969-07-20T20:17:40Z"
-      output: "1969PJFW"
-    - input: "2000-01-01T00:00:00Z"
-      output: "2000ABBB"
-    - input: "2026-10-16T11:59:59Z"
-      output: "2026UZNL"
-    - input: "2026-10-16T12:00:00Z"
-      output: "2026VBBB"
-    - input: "2026-10-17T14:23:45Z"
-      output: "2026VDJB"
-    # Blocks of 200 seconds; P8 carries into P7, and P7 into P6.
-    - input: "2000-01-01T00:03:19.999999999Z"
-      output: "2000ABBB"
-    - input: "2000-01-01T00:03:20Z"
-      output: "2000ABBC"
-    - input: "2000-01-01T01:00:00Z"
-      output: "2000ABBZ"
-    - input: "2000-01-01T01:03:20Z"
-      output: "2000ABCB"
-    - input: "2000-01-01T20:00:00Z"
-      output: "2000ABZZ"
-    - input: "2000-01-01T20:03:20Z"
-      output: "2000ADBB"
-    # Half month boundaries.
-    - input: "2026-01-16T11:59:59Z"
-      output: "2026AZNL"
-    - input: "2026-01-16T12:00:00Z"
-      output: "2026BBBB"
-    - input: "2026-06-30T23:59:59Z"
-      output: "2026LYJR"
-    - input: "2026-07-01T00:00:00Z"
-      output: "2026OBBB"
-    # Leap years.
-    - input: "2024-02-29T12:00:00Z"
-      output: "2024DWNQ"
-    - input: "2026-03-29T12:00:00Z"
-      output: "2026FWNQ"
-    - input: "2026-04-29T12:00:00Z"
-      output: "2026HWNQ"
-    - input: "2024-02-29T23:59:59Z"
-      output: "2024DXDY"
-    - input: "2024-03-01T00:00:00Z"
-      output: "2024EBBB"
-    - input: "2026-02-28T23:59:59Z"
-      output: "2026DVZF"
-    - input: "2026-03-01T00:00:00Z"
-      output: "2026EBBB"
-    # Before 1970, and the first and last years.
-    - input: "1969-12-31T23:59:59Z"
-      output: "1969ZZNL"
-    - input: "1970-01-01T00:00:00Z"
-      output: "1970ABBB"
-    - input: "0000-01-01T00:00:00Z"
-      output: "0000ABBB"
-    - input: "9999-12-31T23:59:59.999999999Z"
-      output: "9999ZZNL"
+    decode:
+        # Spec examples.
+        - input: '1969PJFW'
+          output: '1969-07-20T20:16:40Z'
+        - input: '2000ABBB'
+          output: '2000-01-01T00:00:00Z'
+        - input: '2026UZNL'
+          output: '2026-10-16T11:56:40Z'
+        - input: '2026VBBB'
+          output: '2026-10-16T12:00:00Z'
+        - input: '2026VDJB'
+          output: '2026-10-17T14:23:20Z'
+        # Blocks of 200 seconds; P8 carries into P7, and P7 into P6.
+        - input: '2000ABBC'
+          output: '2000-01-01T00:03:20Z'
+        - input: '2000ABBZ'
+          output: '2000-01-01T01:00:00Z'
+        - input: '2000ABCB'
+          output: '2000-01-01T01:03:20Z'
+        - input: '2000ABZZ'
+          output: '2000-01-01T20:00:00Z'
+        - input: '2000ADBB'
+          output: '2000-01-01T20:03:20Z'
+        # The last block of each kind of half month.
+        - input: '2026AZNL'
+          output: '2026-01-16T11:56:40Z'
+        - input: '2026DVZF'
+          output: '2026-02-28T23:56:40Z'
+        - input: '2024DXDY'
+          output: '2024-02-29T23:56:40Z'
+        - input: '2026LYJR'
+          output: '2026-06-30T23:56:40Z'
+        - input: '2026ZZNL'
+          output: '2026-12-31T23:56:40Z'
+        # A day and time of the month has the same block in every month.
+        - input: '2024DWNQ'
+          output: '2024-02-29T12:00:00Z'
+        - input: '2026FWNQ'
+          output: '2026-03-29T12:00:00Z'
+        - input: '2026HWNQ'
+          output: '2026-04-29T12:00:00Z'
+        - input: '0000DWNQ'
+          output: '0000-02-29T12:00:00Z'
+        # The first and last years.
+        - input: '0000ABBB'
+          output: '0000-01-01T00:00:00Z'
+        - input: '9999ZZNL'
+          output: '9999-12-31T23:56:40Z'
+    encode:
+        # Spec examples.
+        - input: '1969-07-20T20:17:40Z'
+          output: '1969PJFW'
+        - input: '2000-01-01T00:00:00Z'
+          output: '2000ABBB'
+        - input: '2026-10-16T11:59:59Z'
+          output: '2026UZNL'
+        - input: '2026-10-16T12:00:00Z'
+          output: '2026VBBB'
+        - input: '2026-10-17T14:23:45Z'
+          output: '2026VDJB'
+        # Blocks of 200 seconds; P8 carries into P7, and P7 into P6.
+        - input: '2000-01-01T00:03:19.999999999Z'
+          output: '2000ABBB'
+        - input: '2000-01-01T00:03:20Z'
+          output: '2000ABBC'
+        - input: '2000-01-01T01:00:00Z'
+          output: '2000ABBZ'
+        - input: '2000-01-01T01:03:20Z'
+          output: '2000ABCB'
+        - input: '2000-01-01T20:00:00Z'
+          output: '2000ABZZ'
+        - input: '2000-01-01T20:03:20Z'
+          output: '2000ADBB'
+        # Half month boundaries.
+        - input: '2026-01-16T11:59:59Z'
+          output: '2026AZNL'
+        - input: '2026-01-16T12:00:00Z'
+          output: '2026BBBB'
+        - input: '2026-06-30T23:59:59Z'
+          output: '2026LYJR'
+        - input: '2026-07-01T00:00:00Z'
+          output: '2026OBBB'
+        # Leap years.
+        - input: '2024-02-29T12:00:00Z'
+          output: '2024DWNQ'
+        - input: '2026-03-29T12:00:00Z'
+          output: '2026FWNQ'
+        - input: '2026-04-29T12:00:00Z'
+          output: '2026HWNQ'
+        - input: '2024-02-29T23:59:59Z'
+          output: '2024DXDY'
+        - input: '2024-03-01T00:00:00Z'
+          output: '2024EBBB'
+        - input: '2026-02-28T23:59:59Z'
+          output: '2026DVZF'
+        - input: '2026-03-01T00:00:00Z'
+          output: '2026EBBB'
+        # Before 1970, and the first and last years.
+        - input: '1969-12-31T23:59:59Z'
+          output: '1969ZZNL'
+        - input: '1970-01-01T00:00:00Z'
+          output: '1970ABBB'
+        - input: '0000-01-01T00:00:00Z'
+          output: '0000ABBB'
+        - input: '9999-12-31T23:59:59.999999999Z'
+          output: '9999ZZNL'
 
 tcx:
-  decode:
-    # Spec examples.
-    - input: "1969PJFWI0"
-      output: "1969-07-20T20:17:40Z"
-    - input: "2000ABBBB0"
-      output: "2000-01-01T00:00:00Z"
-    - input: "2026UZNLZ9"
-      output: "2026-10-16T11:59:59Z"
-    - input: "2026VBBBB0"
-      output: "2026-10-16T12:00:00Z"
-    - input: "2026VDJBD5"
-      output: "2026-10-17T14:23:45Z"
-    - input: "2024DWNQB0"
-      output: "2024-02-29T12:00:00Z"
-    - input: "2026FWNQB0"
-      output: "2026-03-29T12:00:00Z"
-    # Seconds: PX carries into P9, and P9 into P8.
-    - input: "2000ABBBB9"
-      output: "2000-01-01T00:00:09Z"
-    - input: "2000ABBBC0"
-      output: "2000-01-01T00:00:10Z"
-    - input: "2000ABBBZ9"
-      output: "2000-01-01T00:03:19Z"
-    - input: "2000ABBCB0"
-      output: "2000-01-01T00:03:20Z"
-    # The last second of each kind of half month.
-    - input: "2026AZNLZ9"
-      output: "2026-01-16T11:59:59Z"
-    - input: "2026DVZFZ9"
-      output: "2026-02-28T23:59:59Z"
-    - input: "2024DXDYZ9"
-      output: "2024-02-29T23:59:59Z"
-    - input: "2026LYJRZ9"
-      output: "2026-06-30T23:59:59Z"
-    - input: "2016ZZNLZ9"
-      output: "2016-12-31T23:59:59Z"
-    # The first and last years.
-    - input: "0000ABBBB0"
-      output: "0000-01-01T00:00:00Z"
-    - input: "9999ZZNLZ9"
-      output: "9999-12-31T23:59:59Z"
-  encode:
-    # Spec examples.
-    - input: "1969-07-20T20:17:40Z"
-      output: "1969PJFWI0"
-    - input: "2000-01-01T00:00:00Z"
-      output: "2000ABBBB0"
-    - input: "2026-10-16T11:59:59Z"
-      output: "2026UZNLZ9"
-    - input: "2026-10-16T12:00:00Z"
-      output: "2026VBBBB0"
-    - input: "2026-10-17T14:23:45Z"
-      output: "2026VDJBD5"
-    # Codes are truncated, never rounded.
-    - input: "2026-10-17T14:23:45.999999999Z"
-      output: "2026VDJBD5"
-    - input: "1969-12-31T23:59:59.5Z"
-      output: "1969ZZNLZ9"
-    # Seconds: PX carries into P9, and P9 into P8.
-    - input: "2000-01-01T00:00:09Z"
-      output: "2000ABBBB9"
-    - input: "2000-01-01T00:00:10Z"
-      output: "2000ABBBC0"
-    - input: "2000-01-01T00:03:19Z"
-      output: "2000ABBBZ9"
-    - input: "2000-01-01T00:03:20Z"
-      output: "2000ABBCB0"
-    # Month ends.
-    - input: "2026-06-30T23:59:59Z"
-      output: "2026LYJRZ9"
-    - input: "2026-07-01T00:00:00Z"
-      output: "2026OBBBB0"
-    - input: "2016-12-31T23:59:59Z"
-      output: "2016ZZNLZ9"
-    - input: "2017-01-01T00:00:00Z"
-      output: "2017ABBBB0"
-    # Leap years.
-    - input: "2024-02-29T12:00:00Z"
-      output: "2024DWNQB0"
-    - input: "2026-03-29T12:00:00Z"
-      output: "2026FWNQB0"
-    - input: "2024-02-29T23:59:59Z"
-      output: "2024DXDYZ9"
-    - input: "2024-03-01T00:00:00Z"
-      output: "2024EBBBB0"
-    - input: "2026-02-28T23:59:59Z"
-      output: "2026DVZFZ9"
-    - input: "2026-03-01T00:00:00Z"
-      output: "2026EBBBB0"
-    - input: "2000-02-29T23:59:59Z"
-      output: "2000DXDYZ9"
-    - input: "2100-02-28T23:59:59Z"
-      output: "2100DVZFZ9"
-    # The first and last years.
-    - input: "0000-01-01T00:00:00Z"
-      output: "0000ABBBB0"
-    - input: "9999-12-31T23:59:59Z"
-      output: "9999ZZNLZ9"
+    decode:
+        # Spec examples.
+        - input: '1969PJFWI0'
+          output: '1969-07-20T20:17:40Z'
+        - input: '2000ABBBB0'
+          output: '2000-01-01T00:00:00Z'
+        - input: '2026UZNLZ9'
+          output: '2026-10-16T11:59:59Z'
+        - input: '2026VBBBB0'
+          output: '2026-10-16T12:00:00Z'
+        - input: '2026VDJBD5'
+          output: '2026-10-17T14:23:45Z'
+        - input: '2024DWNQB0'
+          output: '2024-02-29T12:00:00Z'
+        - input: '2026FWNQB0'
+          output: '2026-03-29T12:00:00Z'
+        # Seconds: PX carries into P9, and P9 into P8.
+        - input: '2000ABBBB9'
+          output: '2000-01-01T00:00:09Z'
+        - input: '2000ABBBC0'
+          output: '2000-01-01T00:00:10Z'
+        - input: '2000ABBBZ9'
+          output: '2000-01-01T00:03:19Z'
+        - input: '2000ABBCB0'
+          output: '2000-01-01T00:03:20Z'
+        # The last second of each kind of half month.
+        - input: '2026AZNLZ9'
+          output: '2026-01-16T11:59:59Z'
+        - input: '2026DVZFZ9'
+          output: '2026-02-28T23:59:59Z'
+        - input: '2024DXDYZ9'
+          output: '2024-02-29T23:59:59Z'
+        - input: '2026LYJRZ9'
+          output: '2026-06-30T23:59:59Z'
+        - input: '2016ZZNLZ9'
+          output: '2016-12-31T23:59:59Z'
+        # The first and last years.
+        - input: '0000ABBBB0'
+          output: '0000-01-01T00:00:00Z'
+        - input: '9999ZZNLZ9'
+          output: '9999-12-31T23:59:59Z'
+    encode:
+        # Spec examples.
+        - input: '1969-07-20T20:17:40Z'
+          output: '1969PJFWI0'
+        - input: '2000-01-01T00:00:00Z'
+          output: '2000ABBBB0'
+        - input: '2026-10-16T11:59:59Z'
+          output: '2026UZNLZ9'
+        - input: '2026-10-16T12:00:00Z'
+          output: '2026VBBBB0'
+        - input: '2026-10-17T14:23:45Z'
+          output: '2026VDJBD5'
+        # Codes are truncated, never rounded.
+        - input: '2026-10-17T14:23:45.999999999Z'
+          output: '2026VDJBD5'
+        - input: '1969-12-31T23:59:59.5Z'
+          output: '1969ZZNLZ9'
+        # Seconds: PX carries into P9, and P9 into P8.
+        - input: '2000-01-01T00:00:09Z'
+          output: '2000ABBBB9'
+        - input: '2000-01-01T00:00:10Z'
+          output: '2000ABBBC0'
+        - input: '2000-01-01T00:03:19Z'
+          output: '2000ABBBZ9'
+        - input: '2000-01-01T00:03:20Z'
+          output: '2000ABBCB0'
+        # Month ends.
+        - input: '2026-06-30T23:59:59Z'
+          output: '2026LYJRZ9'
+        - input: '2026-07-01T00:00:00Z'
+          output: '2026OBBBB0'
+        - input: '2016-12-31T23:59:59Z'
+          output: '2016ZZNLZ9'
+        - input: '2017-01-01T00:00:00Z'
+          output: '2017ABBBB0'
+        # Leap years.
+        - input: '2024-02-29T12:00:00Z'
+          output: '2024DWNQB0'
+        - input: '2026-03-29T12:00:00Z'
+          output: '2026FWNQB0'
+        - input: '2024-02-29T23:59:59Z'
+          output: '2024DXDYZ9'
+        - input: '2024-03-01T00:00:00Z'
+          output: '2024EBBBB0'
+        - input: '2026-02-28T23:59:59Z'
+          output: '2026DVZFZ9'
+        - input: '2026-03-01T00:00:00Z'
+          output: '2026EBBBB0'
+        - input: '2000-02-29T23:59:59Z'
+          output: '2000DXDYZ9'
+        - input: '2100-02-28T23:59:59Z'
+          output: '2100DVZFZ9'
+        # The first and last years.
+        - input: '0000-01-01T00:00:00Z'
+          output: '0000ABBBB0'
+        - input: '9999-12-31T23:59:59Z'
+          output: '9999ZZNLZ9'
 
 tcn:
-  decode:
-    # TC4: the year.
-    - input: "2019"
-      output: "2019-01-01T00:00:00Z"
-    - input: "2024"
-      output: "2024-01-01T00:00:00Z"
-    - input: "0000"
-      output: "0000-01-01T00:00:00Z"
-    # TC6, TC7 and TC9.
-    - input: "2019VG"
-      output: "2019-10-19T00:10:00Z"
-    - input: "2019VGG"
-      output: "2019-10-19T04:23:20Z"
-    - input: "2019VGGYH"
-      output: "2019-10-19T05:20:50Z"
-    - input: "2026VDJBD"
-      output: "2026-10-17T14:23:40Z"
-    - input: "2028DX"
-      output: "2028-02-29T20:53:20Z"
-    # With fractions of the second, from TC12 to TC20.
-    - input: "2019VGGYH0.9"
-      output: "2019-10-19T05:20:50.9Z"
-    - input: "2026VDJBD5.25"
-      output: "2026-10-17T14:23:45.25Z"
-    - input: "2026VDJBD5.250"
-      output: "2026-10-17T14:23:45.25Z"
-    - input: "2019VGGYH0.99261"
-      output: "2019-10-19T05:20:50.99261Z"
-    - input: "2019VGGYH0.992615"
-      output: "2019-10-19T05:20:50.992615Z"
-    - input: "2019VGGYH0.992615967"
-      output: "2019-10-19T05:20:50.992615967Z"
-    - input: "2026VDJBD5.0"
-      output: "2026-10-17T14:23:45Z"
-    - input: "2026VDJBD5.000000001"
-      output: "2026-10-17T14:23:45.000000001Z"
-    - input: "2024DXDYZ9.999999999"
-      output: "2024-02-29T23:59:59.999999999Z"
-    - input: "1969ZZNLZ9.999999999"
-      output: "1969-12-31T23:59:59.999999999Z"
-  encode:
-    # The variations in the spec: every length but 5, 8, 10 and 11.
-    - input: "2019-10-19T05:20:50.992615967Z"
-      output: "2019"
-    - input: "2019-10-19T05:20:50.992615967Z"
-      output: "2019VG"
-    - input: "2019-10-19T05:20:50.992615967Z"
-      output: "2019VGG"
-    - input: "2019-10-19T05:20:50.992615967Z"
-      output: "2019VGGYH"
-    - input: "2019-10-19T05:20:50.992615967Z"
-      output: "2019VGGYH0.9"
-    - input: "2019-10-19T05:20:50.992615967Z"
-      output: "2019VGGYH0.99"
-    - input: "2019-10-19T05:20:50.992615967Z"
-      output: "2019VGGYH0.992"
-    - input: "2019-10-19T05:20:50.992615967Z"
-      output: "2019VGGYH0.9926"
-    - input: "2019-10-19T05:20:50.992615967Z"
-      output: "2019VGGYH0.99261"
-    - input: "2019-10-19T05:20:50.992615967Z"
-      output: "2019VGGYH0.992615"
-    - input: "2019-10-19T05:20:50.992615967Z"
-      output: "2019VGGYH0.9926159"
-    - input: "2019-10-19T05:20:50.992615967Z"
-      output: "2019VGGYH0.99261596"
-    - input: "2019-10-19T05:20:50.992615967Z"
-      output: "2019VGGYH0.992615967"
-    # Fractions are padded with zeros, and truncated.
-    - input: "2026-10-17T14:23:45Z"
-      output: "2026VDJBD5.0"
-    - input: "2026-10-17T14:23:45Z"
-      output: "2026VDJBD5.000000000"
-    - input: "2026-10-17T14:23:45.25Z"
-      output: "2026VDJBD5.25"
-    - input: "2026-10-17T14:23:45.25Z"
-      output: "2026VDJBD5.2500"
-    - input: "2026-10-16T11:59:59.999999999Z"
-      output: "2026"
-    - input: "2026-10-16T11:59:59.999999999Z"
-      output: "2026UZ"
-    - input: "2026-10-16T11:59:59.999999999Z"
-      output: "2026UZNLZ9.999999999"
-    # Leap years, before 1970, and the first year.
-    - input: "2028-02-29T20:53:20Z"
-      output: "2028DX"
-    - input: "2024-02-29T23:59:59.5Z"
-      output: "2024DXDYZ9.5"
-    - input: "1969-12-31T23:59:59.999999999Z"
-      output: "1969ZZNLZ9.999999999"
-    - input: "0000-01-01T00:00:00.000000001Z"
-      output: "0000ABBBB0.000000001"
+    decode:
+        # TC4: the year.
+        - input: '2019'
+          output: '2019-01-01T00:00:00Z'
+        - input: '2024'
+          output: '2024-01-01T00:00:00Z'
+        - input: '0000'
+          output: '0000-01-01T00:00:00Z'
+        # TC6, TC7 and TC9.
+        - input: '2019VG'
+          output: '2019-10-19T00:10:00Z'
+        - input: '2019VGG'
+          output: '2019-10-19T04:23:20Z'
+        - input: '2019VGGYH'
+          output: '2019-10-19T05:20:50Z'
+        - input: '2026VDJBD'
+          output: '2026-10-17T14:23:40Z'
+        - input: '2028DX'
+          output: '2028-02-29T20:53:20Z'
+        # With fractions of the second, from TC12 to TC20.
+        - input: '2019VGGYH0.9'
+          output: '2019-10-19T05:20:50.9Z'
+        - input: '2026VDJBD5.25'
+          output: '2026-10-17T14:23:45.25Z'
+        - input: '2026VDJBD5.250'
+          output: '2026-10-17T14:23:45.25Z'
+        - input: '2019VGGYH0.99261'
+          output: '2019-10-19T05:20:50.99261Z'
+        - input: '2019VGGYH0.992615'
+          output: '2019-10-19T05:20:50.992615Z'
+        - input: '2019VGGYH0.992615967'
+          output: '2019-10-19T05:20:50.992615967Z'
+        - input: '2026VDJBD5.0'
+          output: '2026-10-17T14:23:45Z'
+        - input: '2026VDJBD5.000000001'
+          output: '2026-10-17T14:23:45.000000001Z'
+        - input: '2024DXDYZ9.999999999'
+          output: '2024-02-29T23:59:59.999999999Z'
+        - input: '1969ZZNLZ9.999999999'
+          output: '1969-12-31T23:59:59.999999999Z'
+    encode:
+        # The variations in the spec: every length but 5, 8, 10 and 11.
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: '2019'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: '2019VG'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: '2019VGG'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: '2019VGGYH'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: '2019VGGYH0.9'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: '2019VGGYH0.99'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: '2019VGGYH0.992'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: '2019VGGYH0.9926'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: '2019VGGYH0.99261'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: '2019VGGYH0.992615'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: '2019VGGYH0.9926159'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: '2019VGGYH0.99261596'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: '2019VGGYH0.992615967'
+        # Fractions are padded with zeros, and truncated.
+        - input: '2026-10-17T14:23:45Z'
+          output: '2026VDJBD5.0'
+        - input: '2026-10-17T14:23:45Z'
+          output: '2026VDJBD5.000000000'
+        - input: '2026-10-17T14:23:45.25Z'
+          output: '2026VDJBD5.25'
+        - input: '2026-10-17T14:23:45.25Z'
+          output: '2026VDJBD5.2500'
+        - input: '2026-10-16T11:59:59.999999999Z'
+          output: '2026'
+        - input: '2026-10-16T11:59:59.999999999Z'
+          output: '2026UZ'
+        - input: '2026-10-16T11:59:59.999999999Z'
+          output: '2026UZNLZ9.999999999'
+        # Leap years, before 1970, and the first year.
+        - input: '2028-02-29T20:53:20Z'
+          output: '2028DX'
+        - input: '2024-02-29T23:59:59.5Z'
+          output: '2024DXDYZ9.5'
+        - input: '1969-12-31T23:59:59.999999999Z'
+          output: '1969ZZNLZ9.999999999'
+        - input: '0000-01-01T00:00:00.000000001Z'
+          output: '0000ABBBB0.000000001'
 
 leap-seconds:
-  # Every leap second so far. Each takes the next second in the count after
-  # 23:59:59, at the end of June or December.
-  decode:
-    - input: "1972LYJSB0"
-      output: "1972-06-30T23:59:60Z"
-    - input: "1972ZZNMB0"
-      output: "1972-12-31T23:59:60Z"
-    - input: "1973ZZNMB0"
-      output: "1973-12-31T23:59:60Z"
-    - input: "1974ZZNMB0"
-      output: "1974-12-31T23:59:60Z"
-    - input: "1975ZZNMB0"
-      output: "1975-12-31T23:59:60Z"
-    - input: "1976ZZNMB0"
-      output: "1976-12-31T23:59:60Z"
-    - input: "1977ZZNMB0"
-      output: "1977-12-31T23:59:60Z"
-    - input: "1978ZZNMB0"
-      output: "1978-12-31T23:59:60Z"
-    - input: "1979ZZNMB0"
-      output: "1979-12-31T23:59:60Z"
-    - input: "1981LYJSB0"
-      output: "1981-06-30T23:59:60Z"
-    - input: "1982LYJSB0"
-      output: "1982-06-30T23:59:60Z"
-    - input: "1983LYJSB0"
-      output: "1983-06-30T23:59:60Z"
-    - input: "1985LYJSB0"
-      output: "1985-06-30T23:59:60Z"
-    - input: "1987ZZNMB0"
-      output: "1987-12-31T23:59:60Z"
-    - input: "1989ZZNMB0"
-      output: "1989-12-31T23:59:60Z"
-    - input: "1990ZZNMB0"
-      output: "1990-12-31T23:59:60Z"
-    - input: "1992LYJSB0"
-      output: "1992-06-30T23:59:60Z"
-    - input: "1993LYJSB0"
-      output: "1993-06-30T23:59:60Z"
-    - input: "1994LYJSB0"
-      output: "1994-06-30T23:59:60Z"
-    - input: "1995ZZNMB0"
-      output: "1995-12-31T23:59:60Z"
-    - input: "1997LYJSB0"
-      output: "1997-06-30T23:59:60Z"
-    - input: "1998ZZNMB0"
-      output: "1998-12-31T23:59:60Z"
-    - input: "2005ZZNMB0"
-      output: "2005-12-31T23:59:60Z"
-    - input: "2008ZZNMB0"
-      output: "2008-12-31T23:59:60Z"
-    - input: "2012LYJSB0"
-      output: "2012-06-30T23:59:60Z"
-    - input: "2015LYJSB0"
-      output: "2015-06-30T23:59:60Z"
-    - input: "2016ZZNMB0"
-      output: "2016-12-31T23:59:60Z"
-  encode:
-    - input: "1972-06-30T23:59:60Z"
-      output: "1972LYJSB0"
-    - input: "1972-12-31T23:59:60Z"
-      output: "1972ZZNMB0"
-    - input: "1973-12-31T23:59:60Z"
-      output: "1973ZZNMB0"
-    - input: "1974-12-31T23:59:60Z"
-      output: "1974ZZNMB0"
-    - input: "1975-12-31T23:59:60Z"
-      output: "1975ZZNMB0"
-    - input: "1976-12-31T23:59:60Z"
-      output: "1976ZZNMB0"
-    - input: "1977-12-31T23:59:60Z"
-      output: "1977ZZNMB0"
-    - input: "1978-12-31T23:59:60Z"
-      output: "1978ZZNMB0"
-    - input: "1979-12-31T23:59:60Z"
-      output: "1979ZZNMB0"
-    - input: "1981-06-30T23:59:60Z"
-      output: "1981LYJSB0"
-    - input: "1982-06-30T23:59:60Z"
-      output: "1982LYJSB0"
-    - input: "1983-06-30T23:59:60Z"
-      output: "1983LYJSB0"
-    - input: "1985-06-30T23:59:60Z"
-      output: "1985LYJSB0"
-    - input: "1987-12-31T23:59:60Z"
-      output: "1987ZZNMB0"
-    - input: "1989-12-31T23:59:60Z"
-      output: "1989ZZNMB0"
-    - input: "1990-12-31T23:59:60Z"
-      output: "1990ZZNMB0"
-    - input: "1992-06-30T23:59:60Z"
-      output: "1992LYJSB0"
-    - input: "1993-06-30T23:59:60Z"
-      output: "1993LYJSB0"
-    - input: "1994-06-30T23:59:60Z"
-      output: "1994LYJSB0"
-    - input: "1995-12-31T23:59:60Z"
-      output: "1995ZZNMB0"
-    - input: "1997-06-30T23:59:60Z"
-      output: "1997LYJSB0"
-    - input: "1998-12-31T23:59:60Z"
-      output: "1998ZZNMB0"
-    - input: "2005-12-31T23:59:60Z"
-      output: "2005ZZNMB0"
-    - input: "2008-12-31T23:59:60Z"
-      output: "2008ZZNMB0"
-    - input: "2012-06-30T23:59:60Z"
-      output: "2012LYJSB0"
-    - input: "2015-06-30T23:59:60Z"
-      output: "2015LYJSB0"
-    - input: "2016-12-31T23:59:60Z"
-      output: "2016ZZNMB0"
+    # Every leap second so far. Each takes the next second in the count after
+    # 23:59:59, at the end of June or December.
+    decode:
+        - input: '1972LYJSB0'
+          output: '1972-06-30T23:59:60Z'
+        - input: '1972ZZNMB0'
+          output: '1972-12-31T23:59:60Z'
+        - input: '1973ZZNMB0'
+          output: '1973-12-31T23:59:60Z'
+        - input: '1974ZZNMB0'
+          output: '1974-12-31T23:59:60Z'
+        - input: '1975ZZNMB0'
+          output: '1975-12-31T23:59:60Z'
+        - input: '1976ZZNMB0'
+          output: '1976-12-31T23:59:60Z'
+        - input: '1977ZZNMB0'
+          output: '1977-12-31T23:59:60Z'
+        - input: '1978ZZNMB0'
+          output: '1978-12-31T23:59:60Z'
+        - input: '1979ZZNMB0'
+          output: '1979-12-31T23:59:60Z'
+        - input: '1981LYJSB0'
+          output: '1981-06-30T23:59:60Z'
+        - input: '1982LYJSB0'
+          output: '1982-06-30T23:59:60Z'
+        - input: '1983LYJSB0'
+          output: '1983-06-30T23:59:60Z'
+        - input: '1985LYJSB0'
+          output: '1985-06-30T23:59:60Z'
+        - input: '1987ZZNMB0'
+          output: '1987-12-31T23:59:60Z'
+        - input: '1989ZZNMB0'
+          output: '1989-12-31T23:59:60Z'
+        - input: '1990ZZNMB0'
+          output: '1990-12-31T23:59:60Z'
+        - input: '1992LYJSB0'
+          output: '1992-06-30T23:59:60Z'
+        - input: '1993LYJSB0'
+          output: '1993-06-30T23:59:60Z'
+        - input: '1994LYJSB0'
+          output: '1994-06-30T23:59:60Z'
+        - input: '1995ZZNMB0'
+          output: '1995-12-31T23:59:60Z'
+        - input: '1997LYJSB0'
+          output: '1997-06-30T23:59:60Z'
+        - input: '1998ZZNMB0'
+          output: '1998-12-31T23:59:60Z'
+        - input: '2005ZZNMB0'
+          output: '2005-12-31T23:59:60Z'
+        - input: '2008ZZNMB0'
+          output: '2008-12-31T23:59:60Z'
+        - input: '2012LYJSB0'
+          output: '2012-06-30T23:59:60Z'
+        - input: '2015LYJSB0'
+          output: '2015-06-30T23:59:60Z'
+        - input: '2016ZZNMB0'
+          output: '2016-12-31T23:59:60Z'
+    encode:
+        - input: '1972-06-30T23:59:60Z'
+          output: '1972LYJSB0'
+        - input: '1972-12-31T23:59:60Z'
+          output: '1972ZZNMB0'
+        - input: '1973-12-31T23:59:60Z'
+          output: '1973ZZNMB0'
+        - input: '1974-12-31T23:59:60Z'
+          output: '1974ZZNMB0'
+        - input: '1975-12-31T23:59:60Z'
+          output: '1975ZZNMB0'
+        - input: '1976-12-31T23:59:60Z'
+          output: '1976ZZNMB0'
+        - input: '1977-12-31T23:59:60Z'
+          output: '1977ZZNMB0'
+        - input: '1978-12-31T23:59:60Z'
+          output: '1978ZZNMB0'
+        - input: '1979-12-31T23:59:60Z'
+          output: '1979ZZNMB0'
+        - input: '1981-06-30T23:59:60Z'
+          output: '1981LYJSB0'
+        - input: '1982-06-30T23:59:60Z'
+          output: '1982LYJSB0'
+        - input: '1983-06-30T23:59:60Z'
+          output: '1983LYJSB0'
+        - input: '1985-06-30T23:59:60Z'
+          output: '1985LYJSB0'
+        - input: '1987-12-31T23:59:60Z'
+          output: '1987ZZNMB0'
+        - input: '1989-12-31T23:59:60Z'
+          output: '1989ZZNMB0'
+        - input: '1990-12-31T23:59:60Z'
+          output: '1990ZZNMB0'
+        - input: '1992-06-30T23:59:60Z'
+          output: '1992LYJSB0'
+        - input: '1993-06-30T23:59:60Z'
+          output: '1993LYJSB0'
+        - input: '1994-06-30T23:59:60Z'
+          output: '1994LYJSB0'
+        - input: '1995-12-31T23:59:60Z'
+          output: '1995ZZNMB0'
+        - input: '1997-06-30T23:59:60Z'
+          output: '1997LYJSB0'
+        - input: '1998-12-31T23:59:60Z'
+          output: '1998ZZNMB0'
+        - input: '2005-12-31T23:59:60Z'
+          output: '2005ZZNMB0'
+        - input: '2008-12-31T23:59:60Z'
+          output: '2008ZZNMB0'
+        - input: '2012-06-30T23:59:60Z'
+          output: '2012LYJSB0'
+        - input: '2015-06-30T23:59:60Z'
+          output: '2015LYJSB0'
+        - input: '2016-12-31T23:59:60Z'
+          output: '2016ZZNMB0'

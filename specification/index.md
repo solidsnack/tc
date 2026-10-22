@@ -108,19 +108,19 @@ by the TC39 Temporal proposal (<https://tc39.es/proposal-temporal/docs/>).
 
 ```ts
 function timecode(t: Temporal.Instant, digits?: number): string {
-    const p5: string = "ABCDEFGHIJKLOPQRSTUVWXYZ"
-    const p6: string = "BDFGHJKLMPQRSTVWXYZ"
-    const p7: string = "BCDFGHJKLMNPQRVWXYZ"
-    const p8: string = "BCDFGHJLMNPQRSVWXYZ"
-    const p9: string = "BCDEFHIJLMNOPQUVWXYZ"
+    const p5: string = 'ABCDEFGHIJKLOPQRSTUVWXYZ'
+    const p6: string = 'BDFGHJKLMPQRSTVWXYZ'
+    const p7: string = 'BCDFGHJKLMNPQRVWXYZ'
+    const p8: string = 'BCDFGHJLMNPQRSVWXYZ'
+    const p9: string = 'BCDEFHIJLMNOPQUVWXYZ'
 
-    const utc: Temporal.ZonedDateTime = t.toZonedDateTimeISO("UTC")
+    const utc: Temporal.ZonedDateTime = t.toZonedDateTimeISO('UTC')
     const nanoseconds = (utc.millisecond * 1e6) + (utc.microsecond * 1e3) +
         utc.nanosecond
     const year = utc.year
 
     if (year < 0 || year > 9999) {
-        throw new RangeError("TimeCodes support four digit years.")
+        throw new RangeError('TimeCodes support four digit years.')
     }
 
     const mBegin = utc.with({ day: 1 }).startOfDay()
@@ -143,11 +143,11 @@ function timecode(t: Temporal.Instant, digits?: number): string {
 
     // Now we have the four components: year, half-month, block and seconds.
 
-    let accum = ""
+    let accum = ''
 
     while (digits === undefined || accum.length < digits) {
         if (accum.length < 4) {
-            accum = `${year}`.padStart(4, "0")
+            accum = `${year}`.padStart(4, '0')
             continue
         }
 
@@ -170,15 +170,15 @@ function timecode(t: Temporal.Instant, digits?: number): string {
         }
 
         if (digits || nanoseconds > 0) {
-            accum += "." + `${nanoseconds}`.padStart(9, "0")
+            accum += '.' + `${nanoseconds}`.padStart(9, '0')
         } else {
-            accum += ".0"
+            accum += '.0'
         }
 
         break
     }
 
-    return digits ? accum.slice(0, (digits === 11 ? 12 : digits)) : accum
+    return digits ? accum.slice(0, digits === 11 ? 12 : digits) : accum
 }
 ```
 
@@ -263,23 +263,29 @@ as `2016-12-31T23:59:59Z`, the same as `2016ZZNLZ9`.
 
 ```ts
 function parseTimecode(code: string): Temporal.Instant {
-    const decimal: string = "0123456789"
-    const p5: string = "ABCDEFGHIJKLOPQRSTUVWXYZ"
-    const p6: string = "BDFGHJKLMPQRSTVWXYZ"
-    const p7: string = "BCDFGHJKLMNPQRVWXYZ"
-    const p8: string = "BCDFGHJLMNPQRSVWXYZ"
-    const p9: string = "BCDEFHIJLMNOPQUVWXYZ"
+    const decimal: string = '0123456789'
+    const p5: string = 'ABCDEFGHIJKLOPQRSTUVWXYZ'
+    const p6: string = 'BDFGHJKLMPQRSTVWXYZ'
+    const p7: string = 'BCDFGHJKLMNPQRVWXYZ'
+    const p8: string = 'BCDFGHJLMNPQRSVWXYZ'
+    const p9: string = 'BCDEFHIJLMNOPQUVWXYZ'
 
-    const [places, fraction, ...extra] = code.split(".")
+    const [places, fraction, ...extra] = code.split('.')
 
     if (places.length < 4 || places.length > 10) {
-        throw new RangeError("TimeCodes have from 4 to 10 places.")
+        throw new RangeError('TimeCodes have from 4 to 10 places.')
     }
 
-    if (fraction !== undefined && (places.length < 10 || extra.length > 0 ||
-        !/^[0-9]{1,9}$/.test(fraction))) {
-        throw new RangeError(
-            "Only a TCX may have a fraction, of 1 to 9 decimal digits.")
+    if (extra.length > 0) {
+        throw new RangeError('TimeCodes have at most one decimal point.')
+    }
+
+    if (fraction !== undefined && places.length < 10) {
+        throw new RangeError('Only a TCX may have a fraction of the second.')
+    }
+
+    if (fraction !== undefined && !/^[0-9]{1,9}$/.test(fraction)) {
+        throw new RangeError('Fractions of the second have 1 to 9 digits.')
     }
 
     // The digit a place stands for. Places that are not present count as 0.
@@ -291,7 +297,7 @@ function parseTimecode(code: string): Temporal.Instant {
         const n = chars.indexOf(places[i])
 
         if (n < 0) {
-            const place = i < 9 ? `P${i + 1}` : "PX"
+            const place = i < 9 ? `P${i + 1}` : 'PX'
             throw new RangeError(`${places[i]} is not allowed in ${place}.`)
         }
 
@@ -306,8 +312,9 @@ function parseTimecode(code: string): Temporal.Instant {
     const block = (19 * 19 * digit(p6, 5)) + (19 * digit(p7, 6)) +
         digit(p8, 7)
     const second = (10 * digit(p9, 8)) + digit(decimal, 9)
-    const nanoseconds = fraction === undefined ? 0 :
-        Number(fraction.padEnd(9, "0"))
+    const nanoseconds = fraction === undefined
+        ? 0
+        : Number(fraction.padEnd(9, '0'))
 
     // The start of the second half month in seconds. 372 hours is 15.5 days.
     const hm2Begin = 372 * 3600
@@ -319,14 +326,15 @@ function parseTimecode(code: string): Temporal.Instant {
         year: year,
         month: wholeMonth + 1,
         day: 1,
-        timeZone: "UTC",
+        timeZone: 'UTC',
     })
 
     // The second half month ends with the month, so it is shorter in months
     // of fewer than 31 days.
     const hmBegin = isSecondHalf ? hm2Begin : 0
-    const hmLength = isSecondHalf ?
-        (mBegin.daysInMonth * 24 * 3600) - hm2Begin : hm2Begin
+    const hmLength = isSecondHalf
+        ? (mBegin.daysInMonth * 24 * 3600) - hm2Begin
+        : hm2Begin
 
     const locInHalfMonth = (block * 200) + second
 
