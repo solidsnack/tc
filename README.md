@@ -1,19 +1,7 @@
-## Building & Running the Application
+# TimeCodes
 
-Build the shadow JAR with Gradle:
+TimeCodes are sortable, short timestamps.
 
-```bash
-./gradlew shadowJar
-```
-
-Or:
-
-```bash
-./gradlew --offline shadowJar
-```
-
-Then run the copy of the JAR:
-
-```bash
-java -jar build/app.jar
-```
+- `specification/` has the specification and its test cases.
+- `kt/` has the Kotlin library and command line tool, built with Gradle.
+- `ts/` has the TypeScript library and command line tool, built with npm.
