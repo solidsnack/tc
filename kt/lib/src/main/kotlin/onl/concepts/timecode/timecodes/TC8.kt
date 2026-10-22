@@ -21,12 +21,12 @@ data class TC8(
     val halfMonth: Byte,
     /** The day and 2-hour window and tenth part of the hour within the
       *  month in a combined format. */
-    val indexOf10thOfHourIn16DayHalfMonth: Short,
+    val indexOf20thOfHourIn16DayHalfMonth: Short,
 ) : TimeCode {
     init {
         assert(year in 0..9999) { "Year must be: [0,9999]" }
         assert(halfMonth in 0..23) { "Half month must be: [0,23]" }
-        assert(indexOf10thOfHourIn16DayHalfMonth in 0..7999) {
+        assert(indexOf20thOfHourIn16DayHalfMonth in 0..7999) {
             "Index must be: [0,7999]"
         }
     }
@@ -62,7 +62,7 @@ data class TC8(
             return TC8(
                 year.toShort(),
                 month.toByte(),
-                indexOf10thOfHourIn32DayMonth.toShort(),
+                indexOf20thOfHourIn16DayHalfMonth.toShort(),
             )
         }
 
@@ -76,14 +76,14 @@ data class TC8(
 
             val year = Integer.parseInt(yearText.toString())
             val month = monthText.fold(0, Alpha12::accumulate)
-            val indexOf10thOfHourIn32DayMonth
+            val indexOf20thOfHourIn16DayHalfMonth
                 = rest.fold(0, Alpha20::accumulate)
 
             Result.success(
                 TC8(
                     year.toShort(),
                     month.toByte(),
-                    indexOf10thOfHourIn32DayMonth.toShort(),
+                    indexOf20thOfHourIn16DayHalfMonth.toShort(),
                 )
             )
         } catch (e: Exception) {
@@ -103,7 +103,7 @@ data class TC8(
                month to base 12.""".flow()
         }
 
-        val i = indexOf10thOfHourIn16DayHalfMonth.toInt()
+        val i = indexOf20thOfHourIn16DayHalfMonth.toInt()
         val (remDH1, digit8) = Alpha20.nibble(i)
         val (remDH2, digit7) = Alpha20.nibble(remDH1)
         val (remDH3, digit6) = Alpha20.nibble(remDH2)
@@ -148,9 +148,9 @@ data class TC8(
     }
 
     private fun dayAndTimeAsEncoded(): Triple<Int, Int, Int> {
-        val indexIn25HourDay = indexOf10thOfHourIn16DayHalfMonth % 250
+        val indexIn25HourDay = indexOf20thOfHourIn16DayHalfMonth % 250
 
-        val day = indexOf10thOfHourIn16DayHalfMonth / 250
+        val day = indexOf20thOfHourIn16DayHalfMonth / 250
         val hour = indexIn25HourDay / 10
         val minute = (indexIn25HourDay % 10) * 6
 

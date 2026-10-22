@@ -15,6 +15,9 @@ strings, prefer single quotes.
 In languages where terminal semicolons are allowed but optional, the code
 should be structured to avoid terminal semicolons.
 
+When a formatter or linter is configured, they should be run and the issues
+addressed before committing anything.
+
 ### TS
 
 1. TypeScript should be formatted without terminal semicolons.

@@ -1,5 +1,10 @@
 # TimeCodes: Sortable, Short Timestamps
 
+- Specification: TimeCode
+- Summary: Sortable, short, purely alphanumeric timestamps.
+- Revision: 1.0.0
+- As Of: 2026-10-22
+
 TimeCodes are short strings of digits and capital letters that identify a time
 in UTC. They are meant for release tags, lot numbers, purchase orders and other
 identifiers that incorporate a date and time in a simple, flat character set.
