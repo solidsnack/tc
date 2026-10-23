@@ -2,8 +2,8 @@
 
 TimeCodes are sortable, short timestamps, as specified in
 `../specification/index.md`. This crate has a library, with the `TimeCode`
-type, and a command line tool, `timecode`. It uses the `time` crate, and needs
-no time zone data.
+type, and a command line tool, `timecode`, behind the `cli` feature. It uses
+the `time` crate, and needs no time zone data.
 
 ## Library
 
@@ -46,10 +46,14 @@ The `time` crate has no leap seconds, so a leap second, like any code past
 the end of its half month, is read as the last second of the half month:
 `2016ZZNMB0` is `2016-12-31T23:59:59Z`.
 
-To use the library without the command line tool and its dependency on
-`clap`, turn off the default `cli` feature.
-
 ## Command Line
+
+The command line tool needs the `cli` feature, which brings in `clap`.
+`--locked` builds it with the versions of its dependencies in `Cargo.lock`.
+
+```sh
+cargo install --locked --features=cli --path .
+```
 
 ```sh
 timecode tc8 2026-10-17T14:23:45Z  # 2026VDJB
@@ -71,7 +75,7 @@ commands encode the current time.
 ## Development
 
 ```sh
-cargo test            # specification/tests.yaml, proptest properties, docs
-cargo run -- tc8      # the command line tool
-cargo fmt && cargo clippy --all-targets
+cargo test --all-features  # specification/tests.yaml, properties, docs
+cargo run --features=cli   # the command line tool
+cargo fmt && cargo clippy --all-targets --all-features
 ```

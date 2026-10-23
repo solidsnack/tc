@@ -7,7 +7,7 @@ description = "TimeCodes: sortable, short timestamps"
 license = "Unlicense"
 
 [features]
-default = ["cli"]
+default = []
 cli = ["dep:clap"]
 
 [[bin]]
