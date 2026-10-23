@@ -159,14 +159,13 @@ fn timestamp(input: &str) -> Option<UtcDateTime> {
         return None;
     }
 
-    if let Some(digits) = fraction {
-        if stamp.len() < 19
+    if let Some(digits) = fraction
+        && (stamp.len() < 19
             || digits.is_empty()
             || digits.len() > 9
-            || !digits.bytes().all(|b| b.is_ascii_digit())
-        {
-            return None;
-        }
+            || !digits.bytes().all(|b| b.is_ascii_digit()))
+    {
+        return None;
     }
 
     // The number in a part of the timestamp, or 0 if it was left out.

@@ -334,7 +334,7 @@ fn month_of(half_month: u8) -> Month {
 // The length of a half month in seconds. The second half month ends with
 // the month, so it is shorter in months of fewer than 31 days.
 fn length_of(year: u16, half_month: u8) -> u32 {
-    if half_month % 2 == 0 {
+    if half_month.is_multiple_of(2) {
         return HM2_BEGIN;
     }
 
@@ -362,13 +362,12 @@ fn read(code: &str) -> Result<Descriptor, Error> {
         return Err(Error::Fraction);
     }
 
-    if let Some(digits) = fraction {
-        if digits.is_empty()
+    if let Some(digits) = fraction
+        && (digits.is_empty()
             || digits.len() > 9
-            || !digits.bytes().all(|b| b.is_ascii_digit())
-        {
-            return Err(Error::FractionDigits);
-        }
+            || !digits.bytes().all(|b| b.is_ascii_digit()))
+    {
+        return Err(Error::FractionDigits);
     }
 
     // The digit a place stands for. Places that are not present count as 0.
