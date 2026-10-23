@@ -4,10 +4,11 @@ Small ports of the TimeCode specification, `../specification/index.md`. Each
 has a way to encode a time, at any length or as a TC5, TC8 or TCX, and a way
 to parse a code. Each is checked against `../specification/tests.yaml`.
 
-| Port      | Encode                          | Parse            |
-| --------- | ------------------------------- | ---------------- |
-| `es5/`    | `encode`, `tc5`, `tc8`, `tcx`   | `decode`         |
-| `sql-pg/` | `timecode`, `tc5`, `tc8`, `tcx` | `timecode_parse` |
+| Port          | Encode                          | Parse            |
+| ------------- | ------------------------------- | ---------------- |
+| `es5/`        | `encode`, `tc5`, `tc8`, `tcx`   | `decode`         |
+| `sql-pg/`     | `timecode`, `tc5`, `tc8`, `tcx` | `timecode_parse` |
+| `sql-duckdb/` | `timecode`, `tc5`, `tc8`, `tcx` | `timecode_parse` |
 
 The encoders take a time, `t`. `encode(t, n)` and `timecode(t, n)` give a
 code of `n` digits, from 4 to 20, or with the precision of the time if `n` is
@@ -45,13 +46,31 @@ gives one, in any session time zone. The digits of the fraction of a TCX are
 `fraction_digits`, since `precision` is a keyword. A helper, `timecode_digit`,
 is made as well.
 
+## DuckDB
+
+```sql
+.read sql-duckdb/timecode.sql
+SELECT timecode(now(), 12),
+       tc8(now()),
+       tcx(now(), 3),
+       timecode_parse('2026VDJB');
+```
+
+As in PostgreSQL, `timecode`, `tc5`, `tc8` and `tcx` take a `timestamptz`,
+and `timecode_parse` gives one, in any session time zone. The macros cast
+what they are given to a `timestamptz`, as a function would, so a `timestamp`
+is read in the session's time zone. The digits of the fraction of a TCX are
+`fraction_digits` here too. A helper macro, `timecode_digit`, is made as
+well.
+
 ## Precision
 
-PostgreSQL keeps microseconds, so a code made there has at most six digits of
-the fraction that are not 0, and the fraction of a code read there is cut off
-after six digits. PostgreSQL has no year 0, so the year the specification
-calls 0000 is 1 BC there. It reads 23:59:60 as 00:00:00 of the next day, so
-its tests of encoding leap seconds are skipped.
+The databases keep microseconds, so a code made there has at most six digits
+of the fraction that are not 0, and the fraction of a code read there is cut
+off after six digits. PostgreSQL has no year 0, so the year the specification
+calls 0000 is 1 BC there; DuckDB prints it as 0001 (BC). PostgreSQL reads
+23:59:60 as 00:00:00 of the next day, and DuckDB does not read it at all, so
+their tests of encoding leap seconds are skipped.
 
 ## Testing
 
@@ -61,5 +80,6 @@ npm test
 ```
 
 The PostgreSQL tests connect with `psql` and the usual `PG*` environment
-variables, and make the functions in a transaction that is rolled back. They
-are skipped when the database cannot be reached.
+variables, and make the functions in a transaction that is rolled back. The
+DuckDB tests use the `duckdb` command, in memory. Either is skipped when its
+database cannot be reached.
