@@ -1,0 +1,14 @@
+{
+    "name": "timecode-rosetta",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Tests for the TimeCode ports in rosetta/",
+    "license": "Unlicense",
+    "scripts": {
+        "test": "node --test 'test/*.test.js'"
+    },
+    "devDependencies": {
+        "acorn": "^8.19.0",
+        "yaml": "^2.9.1"
+    }
+}
