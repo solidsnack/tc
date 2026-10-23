@@ -9,12 +9,13 @@ const AFTER_HELP: &str = "A TIME is a TimeCode or a timestamp in UTC: \
     second, is read as second 59. Without --digits, tc shows the full \
     precision of the time.";
 
-/// Encode and decode TimeCodes: sortable, short timestamps.
+/// Encode and decode TimeCodes: sortable, short timestamps. Without a
+/// command, print the current time as a TC8.
 #[derive(Parser)]
 #[command(name = "timecode", version, after_help = AFTER_HELP)]
 struct Cli {
     #[command(subcommand)]
-    command: Command,
+    command: Option<Command>,
 }
 
 #[derive(Subcommand)]
@@ -76,7 +77,8 @@ enum Command {
 }
 
 fn main() {
-    let line = match Cli::parse().command {
+    let command = Cli::parse().command.unwrap_or(Command::Tc8 { time: None });
+    let line = match command {
         Command::Tc5 { time } => time.unwrap_or_else(TimeCode::now).tc5(),
         Command::Tc8 { time } => time.unwrap_or_else(TimeCode::now).tc8(),
         Command::Tcx { precision, time } => {

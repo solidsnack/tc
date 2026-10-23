@@ -28,6 +28,7 @@ its half month, is read as the last second of the half month: `2016ZZNMB0` is
 ## Command Line
 
 ```sh
+timecode                           # the current time, as 2026VDJB
 timecode tc8 2026-10-17T14:23:45Z  # 2026VDJB
 timecode tcx -p 2                  # the current time, as 2026VDJBD5.25
 timecode tc 2026-10-17T14:23:45Z   # 2026VDJBD5
@@ -42,7 +43,8 @@ digits, and the time may stop after the hours, the minutes or the seconds, or
 be left out: `2026-10-17T14:23:45.25Z`, `2026-10-17T14:23:45Z`,
 `2026-10-17T14:23Z`, `2026-10-17T14Z` and `2026-10-17Z` are all accepted. As
 in the library, second 60, for a leap second, is read as second 59. Without a
-time, the commands encode the current time.
+time, the commands encode the current time. Without a command, `timecode` is
+the same as `timecode tc8`.
 
 ## Development
 

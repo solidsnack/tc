@@ -168,11 +168,14 @@ const parser = or(
         }),
         { brief: message`Print the time a TimeCode stands for, in UTC.` },
     ),
+    // Without a command, timecode is the same as timecode tc8.
+    object({ command: constant('tc8'), time: constant(undefined) }),
 )
 
 const config = run(parser, {
     programName: 'timecode',
     brief: message`Encode and decode TimeCodes: sortable, short timestamps.`,
+    description: message`Without a command, print the current time as a TC8.`,
     footer: message`${
         text(
             'A TIME is a TimeCode or a timestamp in UTC: ' +
@@ -194,7 +197,7 @@ const line = (() => {
         case 'tc5':
             return config.time.tc5()
         case 'tc8':
-            return config.time.tc8()
+            return (config.time ?? TimeCode.now()).tc8()
         case 'tcx':
             return config.time.tcX(config.precision)
         case 'tc':
