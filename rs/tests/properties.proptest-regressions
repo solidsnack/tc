@@ -1,0 +1,11 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 5f9c49b79bfe2d1bee7128b6a834248b67c1ca3c894e1b252999297d1d533bfe # shrinks to d = Descriptor { year: 0, half_month: 0, block: 6696, seconds: 0, nanoseconds: 0 }
+cc 53083d58f22016b54438efd91aa4816d5c09ea8bdd1c81685be9155111331333 # shrinks to t = 1970-01-01 0:00:00.0 +00, n = 11, p = 0
+cc 252d2186bded82ebfc971e6091d6d9662477966e58f6e58ddf60cf08244c4f3e # shrinks to t = 1970-01-01 0:00:00.0 +00, n = 11
+cc c1e68f33d4225c65130d81eb315aae848c26a05ea9729258dc916969ef901452 # shrinks to (x, y) = (9282-01-28 21:35:08.680078604 +00, 9282-01-28 21:36:40.0 +00), encoder = 1
+cc 6b7a94bb5c0d97ab7de90a2c123cd0093d7ca922b4e1f4ab10c35b5bda538187 # shrinks to (a, b) = ("0000ABBZ", "0000ABBY")
