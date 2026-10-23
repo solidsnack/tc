@@ -23,3 +23,12 @@ time = "0.3.55"
 proptest = "1.11.0"
 time = { version = "0.3.55", features = ["parsing"] }
 yaml-rust2 = "0.13.0"
+
+# A small command line tool. Cargo ignores the profiles of dependencies, so
+# this applies only when building this crate, as cargo install does.
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "z"
+panic = "abort"
+strip = true
