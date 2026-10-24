@@ -37,6 +37,10 @@ addressed before committing anything.
    be descriptive names, not single letters.
 6. Aliases for columns or tables should always be written with `AS`.
 
+### Regular Expressions
+
+1. Prefer bracketed character classes (`[.]`) to escapes (`\.`).
+
 ## Commit Messages
 
 1. The first line should be no more than 50 characters.
