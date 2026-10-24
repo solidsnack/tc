@@ -5,6 +5,10 @@ TimeCodes are sortable, short timestamps, as specified in
 `onl.concepts.timecode`. It has one class, `TimeCode`, which is meant to be
 as easy to use from Java as from Kotlin.
 
+The library is versioned apart from the specification.
+`TimeCode.SPEC_VERSION` is the revision of the specification it follows:
+`"1.1.0"`.
+
 ## Kotlin
 
 ```kotlin

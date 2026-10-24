@@ -18,6 +18,10 @@ left out. The parsers take a code of any length. Codes past the end of their
 half month, like those of leap seconds, are read as the last second of the
 half month.
 
+Each port also gives the revision of the specification it follows:
+`timecode.SPEC_VERSION` in ECMAScript 5 and `timecode_spec_version()` in
+SQL. All three follow 1.0.0, without the bicentennial codes of 1.1.0.
+
 ## ECMAScript 5
 
 ```js

@@ -5,6 +5,9 @@ TimeCodes are sortable, short timestamps, as specified in
 type, and a command line tool, `timecode`, behind the `cli` feature. It uses
 the `time` crate, and needs no time zone data.
 
+The crate is versioned apart from the specification. `SPEC_VERSION` is the
+revision of the specification it follows: `"1.1.0"`.
+
 ## Library
 
 ```rust

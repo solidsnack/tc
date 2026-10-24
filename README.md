@@ -7,3 +7,7 @@ TimeCodes are sortable, short timestamps.
 - `ts/` has the TypeScript library and command line tool, built with npm.
 - `rs/` has the Rust library and command line tool, built with Cargo.
 - `rosetta/` has small ports: ECMAScript 5, PostgreSQL and DuckDB.
+
+Implementations of the TimeCode specification are versioned separately from it
+but contain a constant indicating which version of the TimeCode spec they
+follow.

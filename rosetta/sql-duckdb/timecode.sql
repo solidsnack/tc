@@ -10,6 +10,10 @@
 -- timecode_parse(code) gives the timestamptz a TimeCode of any length stands
 -- for.
 --
+-- timecode_spec_version() gives the revision of the specification that
+-- these macros follow. They have no bicentennial codes, which came in
+-- 1.1.0.
+--
 -- The macros cast what they are given to a timestamptz, as a function that
 -- takes one would, so a timestamp is read in the session's time zone. The
 -- session's time zone makes no other difference.
@@ -18,6 +22,8 @@
 -- digits of the fraction of the second that are not 0, and the fraction of
 -- a code that is read here is cut off after six digits. Like the
 -- specification, DuckDB counts the year 0000, which it prints as 0001 (BC).
+
+CREATE OR REPLACE MACRO timecode_spec_version() AS '1.0.0';
 
 CREATE OR REPLACE MACRO timecode(t, digits := NULL) AS (
   -- The time in UTC. The fields of a timestamptz, like year(t), are in the

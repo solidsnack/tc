@@ -9,10 +9,23 @@
 --
 -- timecode_parse(code) gives the time a TimeCode of any length stands for.
 --
+-- timecode_spec_version() gives the revision of the specification that
+-- these functions follow. They have no bicentennial codes, which came in
+-- 1.1.0.
+--
 -- A timestamptz holds microseconds, so a TimeCode made here has at most six
 -- digits of the fraction of the second that are not 0, and the fraction of
 -- a code that is read here is cut off after six digits. PostgreSQL has no
 -- year 0: the year the specification calls 0000 is 1 BC.
+
+CREATE OR REPLACE FUNCTION timecode_spec_version()
+  RETURNS text
+  LANGUAGE sql
+  IMMUTABLE
+  PARALLEL SAFE
+AS $$
+  SELECT '1.0.0'
+$$;
 
 CREATE OR REPLACE FUNCTION timecode(t timestamptz, digits integer DEFAULT NULL)
   RETURNS text

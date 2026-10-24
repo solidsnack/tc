@@ -4,6 +4,9 @@ TimeCodes are sortable, short timestamps, as specified in
 `../specification/index.md`. This package has a library, which exports the
 `TimeCode` class, and a command line tool, `timecode`.
 
+The package is versioned apart from the specification. It exports
+`SPEC_VERSION`, the revision of the specification it follows: `'1.1.0'`.
+
 ## Library
 
 ```ts

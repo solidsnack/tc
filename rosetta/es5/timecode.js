@@ -17,6 +17,9 @@
 //
 // Neither needs a Date to do its work: the calendar is reckoned here, the
 // same as in Temporal, so the years 0000 to 9999 all work alike.
+//
+// timecode.SPEC_VERSION is the revision of the specification that this
+// port follows. It has no bicentennial codes, which came in 1.1.0.
 ;(function (root) {
     'use strict'
 
@@ -272,6 +275,7 @@
     }
 
     var timecode = {
+        SPEC_VERSION: '1.0.0',
         encode: encode,
         tc5: tc5,
         tc8: tc8,
