@@ -5,6 +5,7 @@ const p6: string = 'BDFGHJKLMPQRSTVWXYZ'
 const p7: string = 'BCDFGHJKLMNPQRVWXYZ'
 const p8: string = 'BCDFGHJLMNPQRSVWXYZ'
 const p9: string = 'BCDEFHIJLMNOPQUVWXYZ'
+const b1: string = 'ABCDEFGHIJKLMNOPQRST'
 const decimal: string = '0123456789'
 
 // The start of the second half month in seconds. 372 hours is 15.5 days.
@@ -113,6 +114,51 @@ export class TimeCode {
             seconds: locInHalfMonth % 200,
             nanoseconds: d.nanoseconds,
         })
+    }
+
+    /**
+     * Read a bicentennial code of any length, from BC2 to a BC8 with a
+     * fraction of the second. Of the years with its place in the cycle of
+     * 200 years, it stands for the one nearest the year of near, by default
+     * now: no more than 100 years before it, and less than 100 after. As
+     * with a TimeCode, it stands for the start of the time it covers.
+     */
+    static parseBC(code: string, near: TimeCode = TimeCode.now()): TimeCode {
+        const [places, fraction] = code.split('.')
+
+        if (places.length < 2 || places.length > 8) {
+            throw new RangeError('Bicentennial codes have from 2 to 8 places.')
+        }
+
+        if (fraction !== undefined && places.length < 8) {
+            throw new RangeError(
+                'Only a BC8 may have a fraction of the second.',
+            )
+        }
+
+        // The digit a place of the year stands for.
+        const digit = (chars: string, i: number): number => {
+            const n = chars.indexOf(places[i])
+
+            if (n < 0) {
+                throw new RangeError(
+                    `${places[i]} is not allowed in B${i + 1}.`,
+                )
+            }
+
+            return n
+        }
+
+        const years = (10 * digit(b1, 0)) + digit(decimal, 1)
+        const earliest = near.#year - 100
+        const year = earliest + ((((years - earliest) % 200) + 200) % 200)
+
+        if (year < 0 || year > 9999) {
+            throw new RangeError('TimeCodes support four digit years.')
+        }
+
+        // The rest is read as the TimeCode with the year written out.
+        return TimeCode.parse(`${year}`.padStart(4, '0') + code.slice(2))
     }
 
     // Reads the components of a TimeCode of any length, from TC4 to TCX
@@ -245,6 +291,37 @@ export class TimeCode {
         return code.display(digits)
     }
 
+    /**
+     * Present the input value or current time as a BC4 code.
+     */
+    static bc4(): string
+    static bc4(t: Temporal.Instant): string
+    static bc4(t: Temporal.ZonedDateTime): string
+    static bc4(t?: Temporal.Instant | Temporal.ZonedDateTime): string {
+        const code = TimeCode.of(t ?? temporal.Now.instant())
+        return code.bc4()
+    }
+
+    /**
+     * Present the input value or current time as a bicentennial code with
+     * the requested number of digits, if passed, or with the precision of
+     * the value.
+     */
+    static bc(digits?: number): string
+    static bc(t: Temporal.Instant, digits?: number): string
+    static bc(t: Temporal.ZonedDateTime, digits?: number): string
+    static bc(
+        t?: number | Temporal.Instant | Temporal.ZonedDateTime,
+        digits?: number,
+    ): string {
+        if (typeof t === 'number') {
+            return TimeCode.now().bc(t)
+        }
+
+        const code = TimeCode.of(t ?? temporal.Now.instant())
+        return code.bc(digits)
+    }
+
     // Produce a full length (TC20) code.
     #format(): string {
         const block = this.#block
@@ -307,10 +384,40 @@ export class TimeCode {
         const s = this.#format()
 
         if (digits === undefined) {
-            return s.replace(/\.?0+$/, '')
+            return s.replace(/[.]?0+$/, '')
         }
 
         return s.slice(0, digits === 11 ? 12 : digits)
+    }
+
+    /**
+     * Display the TimeCode in BC4 format: the place of its year in a cycle
+     * of 200 years, the half month and the first place of the block.
+     */
+    bc4(): string {
+        return this.bc(4)
+    }
+
+    /**
+     * Display the TimeCode as a bicentennial code, with the requested number
+     * of digits, if passed, or with the precision of the encoded value: the
+     * TimeCode with its year written as its place in a cycle of 200 years.
+     * As in the specification, BC9 is displayed like BC10.
+     */
+    bc(digits?: number): string {
+        if (
+            digits !== undefined &&
+            (!Number.isInteger(digits) || digits < 2 || digits > 18)
+        ) {
+            throw new RangeError(
+                'Bicentennial codes have from 2 to 18 digits.',
+            )
+        }
+
+        const years = this.#year % 200
+        const code = this.display(digits === undefined ? digits : digits + 2)
+
+        return b1[Math.floor(years / 10)] + `${years % 10}` + code.slice(4)
     }
 
     /**

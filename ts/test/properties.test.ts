@@ -9,6 +9,7 @@ const p6 = 'BDFGHJKLMPQRSTVWXYZ'
 const p7 = 'BCDFGHJKLMNPQRVWXYZ'
 const p8 = 'BCDFGHJLMNPQRSVWXYZ'
 const p9 = 'BCDEFHIJLMNOPQUVWXYZ'
+const b1 = 'ABCDEFGHIJKLMNOPQRST'
 const decimal = '0123456789'
 
 const first = Temporal.Instant.from('0000-01-01T00:00:00Z')
@@ -62,6 +63,9 @@ const ordered = fc
 
 // Lengths of TimeCodes, from TC4 to TC20.
 const digits = fc.integer({ min: 4, max: 20 })
+
+// Lengths of bicentennial codes, from BC2 to BC18.
+const bcDigits = fc.integer({ min: 2, max: 18 })
 
 // Any TC5, TC8 or TCX the grammar allows, whether or not it is past the end
 // of its half month, as a choice of character for every place. Within each
@@ -230,32 +234,142 @@ describe('reading and writing', () => {
         )
     })
 
-    test('a code past the end of its half month reads as its last second', () => {
-        const offset = (d: TimeCode.Descriptor) => (d.block * 200) + d.seconds
+    test(
+        'a code past the end of its half month reads as its last second',
+        () => {
+            const offset = (d: TimeCode.Descriptor) =>
+                (d.block * 200) + d.seconds
 
+            fc.assert(
+                fc.property(descriptor, (d) => {
+                    const t = TimeCode.parse(d).toInstant()
+                    const read = TimeCode.of(t).descriptor
+                    const label = `${JSON.stringify(d)}: ${t}`
+
+                    assert.equal(read.year, d.year, label)
+                    assert.equal(read.halfMonth, d.halfMonth, label)
+                    assert.equal(read.nanoseconds, d.nanoseconds, label)
+
+                    if (offset(read) < offset(d)) {
+                        // One second later is in the next half month, which
+                        // may be past the year 9999.
+                        const next = t.add({ seconds: 1 })
+                        const isPast =
+                            next.toZonedDateTimeISO('UTC').year > 9999 ||
+                            TimeCode.of(next).descriptor.halfMonth !==
+                                d.halfMonth
+                        assert.ok(isPast, label)
+                    } else {
+                        assert.deepEqual(read, { ...d }, label)
+                    }
+                }),
+                runs,
+            )
+        },
+    )
+})
+
+describe('bicentennial codes', () => {
+    // The place of a TimeCode's year in its cycle of 200 years.
+    const place = (code: TimeCode): string => {
+        const years = code.descriptor.year % 200
+        return b1[Math.floor(years / 10)] + `${years % 10}`
+    }
+
+    // The TimeCode of the start of a year.
+    const startOf = (year: number): TimeCode =>
+        TimeCode.parse(`${year}`.padStart(4, '0'))
+
+    test('a code is the TimeCode with the place of its year', () => {
         fc.assert(
-            fc.property(descriptor, (d) => {
-                const t = TimeCode.parse(d).toInstant()
-                const read = TimeCode.of(t).descriptor
-                const label = `${JSON.stringify(d)}: ${t}`
+            fc.property(instant, bcDigits, (t, n) => {
+                const code = TimeCode.of(t)
 
-                assert.equal(read.year, d.year, label)
-                assert.equal(read.halfMonth, d.halfMonth, label)
-                assert.equal(read.nanoseconds, d.nanoseconds, label)
-
-                if (offset(read) < offset(d)) {
-                    // One second later is in the next half month, which may
-                    // be past the year 9999.
-                    const next = t.add({ seconds: 1 })
-                    const isPast =
-                        next.toZonedDateTimeISO('UTC').year > 9999 ||
-                        TimeCode.of(next).descriptor.halfMonth !== d.halfMonth
-                    assert.ok(isPast, label)
-                } else {
-                    assert.deepEqual(read, { ...d }, label)
-                }
+                assert.equal(
+                    code.bc(n),
+                    place(code) + code.display(n + 2).slice(4),
+                )
+                assert.equal(code.bc(), place(code) + code.display().slice(4))
+                assert.equal(code.bc4(), code.bc(4))
             }),
             runs,
         )
+    })
+
+    // Near a time no more than 100 years after it, or less than 100 before,
+    // a code reads as the TimeCode it comes from does.
+    test('a code reads near its time as its TimeCode does', () => {
+        fc.assert(
+            fc.property(
+                instant,
+                bcDigits,
+                fc.integer({ min: -99, max: 100 }),
+                (t, n, offset) => {
+                    const code = TimeCode.of(t)
+                    const year = code.descriptor.year + offset
+                    const near = startOf(Math.min(Math.max(year, 0), 9999))
+
+                    assert.equal(
+                        TimeCode.parseBC(code.bc(n), near).toString(),
+                        TimeCode.parse(code.display(n + 2)).toString(),
+                    )
+                },
+            ),
+            runs,
+        )
+    })
+
+    test('a code reads as the nearest year in its cycle', () => {
+        fc.assert(
+            fc.property(
+                instant,
+                fc.integer({ min: 0, max: 9999 }),
+                (t, nearYear) => {
+                    const code = TimeCode.of(t)
+                    const near = startOf(nearYear)
+                    let read: TimeCode
+
+                    try {
+                        read = TimeCode.parseBC(code.bc4(), near)
+                    } catch (e) {
+                        // The nearest year may be before 0000 or after 9999.
+                        assert.ok(nearYear < 100 || nearYear >= 9900)
+                        assert.equal(
+                            (e as Error).message,
+                            'TimeCodes support four digit years.',
+                        )
+                        return
+                    }
+
+                    const year = read.descriptor.year
+                    assert.ok(year - nearYear >= -100 && year - nearYear < 100)
+                    assert.equal(year % 200, code.descriptor.year % 200)
+                },
+            ),
+            runs,
+        )
+    })
+
+    test('a code that is not one is rejected', () => {
+        const near = startOf(2026)
+        const errors = [
+            ['C', 'Bicentennial codes have from 2 to 8 places.'],
+            ['C6VDJBD5B', 'Bicentennial codes have from 2 to 8 places.'],
+            ['C6VD.5', 'Only a BC8 may have a fraction of the second.'],
+            ['U6VD', 'U is not allowed in B1.'],
+            ['CXVD', 'X is not allowed in B2.'],
+            ['C6MD', 'M is not allowed in P5.'],
+            ['C6VDJBD5.', 'Fractions of the second have 1 to 9 digits.'],
+        ]
+
+        for (const [input, reason] of errors) {
+            assert.throws(() => TimeCode.parseBC(input, near), {
+                name: 'RangeError',
+                message: reason,
+            })
+        }
+
+        assert.throws(() => TimeCode.of(first).bc(1), RangeError)
+        assert.throws(() => TimeCode.of(first).bc(19), RangeError)
     })
 })

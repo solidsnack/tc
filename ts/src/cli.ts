@@ -26,7 +26,10 @@ const { version } = JSON.parse(
 // The only timestamps accepted: yyyy-mm-ddTHH:MM:SS.nnnnnnnnnZ, where the
 // fraction may have from 1 to 9 digits, and the time may stop after the
 // hours, the minutes or the seconds, or be left out.
-const timestamp = /^\d{4}-\d{2}-\d{2}(T\d{2}(:\d{2}(:\d{2}(\.\d{1,9})?)?)?)?Z$/
+const timestamp = new RegExp(
+    '^[0-9]{4}-[0-9]{2}-[0-9]{2}' +
+        '(T[0-9]{2}(:[0-9]{2}(:[0-9]{2}([.][0-9]{1,9})?)?)?)?Z$',
+)
 
 // A time to encode: a timestamp in UTC, or a TimeCode.
 function time(): ValueParser<'sync', TimeCode> {
@@ -152,6 +155,33 @@ const parser = or(
         { brief: message`Print a time as a TimeCode of any length.` },
     ),
     command(
+        'bc4',
+        object({ command: constant('bc4'), time: now() }),
+        {
+            brief: message`Print a time as a BC4 code: about 20 hours, in a ${
+                text('cycle of 200 years.')
+            }`,
+        },
+    ),
+    command(
+        'bc',
+        object({
+            command: constant('bc'),
+            digits: optional(
+                option(
+                    '-d',
+                    '--digits',
+                    integer({ min: 2, max: 18, metavar: 'LENGTH' }),
+                    {
+                        description: message`Length of the code.`,
+                    },
+                ),
+            ),
+            time: now(),
+        }),
+        { brief: message`Print a time as a bicentennial code of any length.` },
+    ),
+    command(
         'parse',
         object({
             command: constant('parse'),
@@ -183,8 +213,8 @@ const config = run(parser, {
                 'have from 1 to 9 digits, and the time may stop after the ' +
                 'hours, the minutes or the seconds, or be left out, as in ' +
                 '2026-10-17Z. Second 60, for a leap second, is read as ' +
-                'second 59. Without --digits, tc shows the full precision ' +
-                'of the time.',
+                'second 59. Without --digits, tc and bc show the full ' +
+                'precision of the time.',
         )
     }`,
     help: 'both',
@@ -202,6 +232,10 @@ const line = (() => {
             return config.time.tcX(config.precision)
         case 'tc':
             return config.time.display(config.digits)
+        case 'bc4':
+            return config.time.bc4()
+        case 'bc':
+            return config.time.bc(config.digits)
         case 'parse': {
             const [input, t] = config.code
             const time = t.toInstant().toString()

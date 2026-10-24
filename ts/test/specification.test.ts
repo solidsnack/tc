@@ -6,7 +6,7 @@ import { describe, test } from 'node:test'
 import { parse } from 'yaml'
 import { TimeCode } from '../src/index.js'
 
-type Case = { input: string; output: string }
+type Case = { input: string; near?: string; output: string }
 type Group = { decode: Case[]; encode: Case[] }
 
 const suite: Record<string, Group> = parse(
@@ -46,6 +46,32 @@ for (const [name, encoder] of Object.entries(encoders)) {
         }
     })
 }
+
+// Bicentennial codes are read near a time, which each decode test gives.
+describe('tests.yaml: bc', () => {
+    for (const { input, near, output } of suite.bc.decode) {
+        test(`decode ${input} near ${near}`, () => {
+            const t = TimeCode.parseBC(input, TimeCode.of(instant(near!)))
+            assert.equal(t.toInstant().toString(), output)
+        })
+    }
+
+    for (const { input, output } of suite.bc.encode) {
+        test(`encode ${input}`, () => {
+            const t = instant(input)
+            const n = output.length
+            const codes = [
+                TimeCode.of(t).bc(n),
+                TimeCode.bc(t, n),
+                ...(n === 4 ? [TimeCode.of(t).bc4(), TimeCode.bc4(t)] : []),
+            ]
+
+            for (const code of codes) {
+                assert.equal(code, output)
+            }
+        })
+    }
+})
 
 // Temporal has no leap seconds: it reads 23:59:60 as 23:59:59. TimeCodes
 // treat a leap second as the last second of its half month, so both ways
