@@ -74,6 +74,8 @@ timecode tc8 2026-10-17T14:23:45Z  # 2026VDJB
 timecode tcx -p 2                  # the current time, as 2026VDJBD5.25
 timecode tc 2026-10-17T14:23:45Z   # 2026VDJBD5
 timecode bc4 2026-10-17T14:23:45Z  # C6VD
+timecode bc5 2026-10-17T14:23:45Z  # C6VDJ
+timecode bc8                       # the current time, as C6VDJBD5
 timecode bc -d 6                   # the current time, as C6VDJB
 timecode parse 2026VDJB            # 2026-10-17T14:23:20Z
 timecode parse --json 2026VDJB

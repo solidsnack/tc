@@ -72,6 +72,20 @@ enum Command {
         #[arg(value_parser = time)]
         time: Option<TimeCode>,
     },
+    /// Print a time as a BC5 code: about an hour, in a cycle of 200 years.
+    #[command(after_help = AFTER_HELP)]
+    Bc5 {
+        /// The time to encode; by default, now.
+        #[arg(value_parser = time)]
+        time: Option<TimeCode>,
+    },
+    /// Print a time as a BC8 code: the second, in a cycle of 200 years.
+    #[command(after_help = AFTER_HELP)]
+    Bc8 {
+        /// The time to encode; by default, now.
+        #[arg(value_parser = time)]
+        time: Option<TimeCode>,
+    },
     /// Print a time as a bicentennial code of any length.
     #[command(after_help = AFTER_HELP)]
     Bc {
@@ -115,6 +129,8 @@ fn main() {
             }
         }
         Command::Bc4 { time } => time.unwrap_or_else(TimeCode::now).bc4(),
+        Command::Bc5 { time } => time.unwrap_or_else(TimeCode::now).bc(5),
+        Command::Bc8 { time } => time.unwrap_or_else(TimeCode::now).bc(8),
         Command::Bc { digits, time } => {
             let code = time.unwrap_or_else(TimeCode::now);
 
