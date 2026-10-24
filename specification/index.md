@@ -2,8 +2,8 @@
 
 - Specification: TimeCode
 - Summary: Sortable, short, purely alphanumeric timestamps.
-- Revision: 1.0.0
-- As Of: 2026-10-22
+- Revision: 1.1.0
+- As Of: 2026-10-24
 
 TimeCodes are short strings of digits and capital letters that identify a time
 in UTC. They are meant for release tags, lot numbers, purchase orders and other
@@ -16,6 +16,8 @@ comparable precision and do not make use of special characters.
 - The TC8 code provides resolution of 200 seconds -- almost 160000 codes per
   year -- in 8 characters.
 - The TC5 code provides resolution of half-months in 5 characters.
+- The BC4 code provides resolution of about 20 hours in 4 characters, in a
+  cycle of 200 years (see "Bicentennial Codes", below).
 
 The codes contain the year in full, followed by a mostly-alpha encoding of the
 time within the year:
@@ -355,5 +357,170 @@ function parseTimecode(code: string): Temporal.Instant {
         seconds: locInMonth,
         nanoseconds: nanoseconds,
     })
+}
+```
+
+## Bicentennial Codes
+
+A bicentennial code writes only the place of the year in a cycle of 200
+years, in two places, B1 and B2, where a TimeCode writes the year in full.
+The places after them are those of a TimeCode, from P5 on, so a bicentennial
+code is two characters shorter than the TimeCode of the same time.
+
+| Place | Characters                             |
+| ----- | -------------------------------------- |
+| B1    | `          ABCDEFGHIJKLMNOPQRST      ` |
+| B2    | `0123456789                          ` |
+
+The place of the year in the cycle is the year modulo 200, from 0 to 199:
+the tens in B1, in base 20, and the years in B2, in decimal. So 2000 is
+`A0`, 2026 is `C6` and 2199 is `T9`. The cycle repeats, so 1800 and 2200 are
+`A0` too, and any year has a bicentennial code.
+
+A bicentennial code begins with a letter and a TimeCode with a digit, so the
+two cannot be confused. Within a cycle, bicentennial codes sort in time
+order.
+
+### BC4
+
+The BC4 code is a representation of a time in UTC to a granularity of 361
+blocks of 200 seconds: 20 hours, 3 minutes and 20 seconds. It comprises
+places B1, B2, P5 and P6: the place of the year in the cycle, the half month
+and the first place of the block.
+
+| UTC                    | BC4    |
+| ---------------------- | ------ |
+| `1969-07-20T20:17:40Z` | `Q9PJ` |
+| `2000-01-01T00:00:00Z` | `A0AB` |
+| `2026-10-16T11:59:59Z` | `C6UZ` |
+| `2026-10-16T12:00:00Z` | `C6VB` |
+| `2026-10-17T14:23:45Z` | `C6VD` |
+
+### Variations
+
+Like TimeCodes, bicentennial codes can be clipped or extended with a fraction
+of the second, from BC2 (just the place of the year) to BC18 (nanoseconds).
+A BCn is the TC(n+2) of the same time, with its year written in B1 and B2:
+
+- RFC 3339: `2019-10-19T05:20:50.992615967Z`
+- BC2: `B9`
+- BC3: `B9V`
+- BC4: `B9VG`
+- ...
+- BC8: `B9VGGYH0`
+- BC9: (Formatted like BC10, as TC11 is formatted like TC12.)
+- BC10: `B9VGGYH0.9`
+- ...
+- BC18: `B9VGGYH0.992615967`
+
+### Reading a Bicentennial Code
+
+A bicentennial code does not say which cycle it is in, so it is read near a
+given time, by default the present. Of the years with its place in the
+cycle, it stands for the one nearest the year of that time: no more than 100
+years before it, and less than 100 years after. Read near 2026, `T9` stands
+for 1999 and `C6` for 2026; read near 2130, `C6` stands for 2226.
+
+As with a TimeCode, a bicentennial code stands for the start of the time it
+covers, in the calendar of its year, and a code past the end of its half
+month is read as the last second of the half month. So `A0DZ` stands for
+`2000-02-29T23:59:59Z` when read near 2026, and `2200-02-28T23:59:59Z` when
+read near 2200, which is not a leap year.
+
+### Calculating and Parsing a BC4
+
+```ts
+function bc4(t: Temporal.Instant): string {
+    const b1: string = 'ABCDEFGHIJKLMNOPQRST'
+    const p5: string = 'ABCDEFGHIJKLOPQRSTUVWXYZ'
+    const p6: string = 'BDFGHJKLMPQRSTVWXYZ'
+
+    const utc: Temporal.ZonedDateTime = t.toZonedDateTimeISO('UTC')
+
+    // The place of the year in the cycle, from 0 to 199, for any year.
+    const years = ((utc.year % 200) + 200) % 200
+
+    const mBegin = utc.with({ day: 1 }).startOfDay()
+    const locInMonth = (t.epochMilliseconds - mBegin.epochMilliseconds) / 1000
+
+    // The start of the second half month in seconds. 372 hours is 15.5 days.
+    const hm2Begin = 372 * 3600
+
+    // Calculate offsets needed if we are in the second half-month.
+    const corrections = locInMonth < hm2Begin ? [0, 0] : [1, -hm2Begin]
+
+    // Calculate the half-month index.
+    const wholeMonth = utc.month - 1
+    const halfMonth = (2 * wholeMonth) + corrections[0]
+
+    // Calculate the block of 200s, of which P6 shows the first place.
+    const locInHalfMonth = locInMonth + corrections[1]
+    const block = Math.floor(locInHalfMonth / 200)
+
+    return b1[Math.floor(years / 10)] +
+        `${years % 10}` +
+        p5[halfMonth] +
+        p6[Math.floor(block / (19 * 19))]
+}
+
+function parseBC4(
+    code: string,
+    near: Temporal.Instant = Temporal.Now.instant(),
+): Temporal.Instant {
+    const b1: string = 'ABCDEFGHIJKLMNOPQRST'
+    const decimal: string = '0123456789'
+    const p5: string = 'ABCDEFGHIJKLOPQRSTUVWXYZ'
+    const p6: string = 'BDFGHJKLMPQRSTVWXYZ'
+
+    if (code.length !== 4) {
+        throw new RangeError('A BC4 has 4 places.')
+    }
+
+    // The digit a place stands for.
+    const digit = (chars: string, i: number): number => {
+        const n = chars.indexOf(code[i])
+
+        if (n < 0) {
+            const place = ['B1', 'B2', 'P5', 'P6'][i]
+            throw new RangeError(`${code[i]} is not allowed in ${place}.`)
+        }
+
+        return n
+    }
+
+    const years = (10 * digit(b1, 0)) + digit(decimal, 1)
+    const halfMonth = digit(p5, 2)
+    const block = 19 * 19 * digit(p6, 3)
+
+    // Of the years with this place in the cycle, the one nearest the year
+    // of near: no more than 100 years before it, and less than 100 after.
+    const earliest = near.toZonedDateTimeISO('UTC').year - 100
+    const year = earliest + ((((years - earliest) % 200) + 200) % 200)
+
+    // The start of the second half month in seconds. 372 hours is 15.5 days.
+    const hm2Begin = 372 * 3600
+
+    const wholeMonth = Math.floor(halfMonth / 2)
+    const isSecondHalf = halfMonth % 2 === 1
+
+    const mBegin: Temporal.ZonedDateTime = Temporal.ZonedDateTime.from({
+        year: year,
+        month: wholeMonth + 1,
+        day: 1,
+        timeZone: 'UTC',
+    })
+
+    // The second half month ends with the month, so it is shorter in months
+    // of fewer than 31 days.
+    const hmBegin = isSecondHalf ? hm2Begin : 0
+    const hmLength = isSecondHalf
+        ? (mBegin.daysInMonth * 24 * 3600) - hm2Begin
+        : hm2Begin
+
+    // Codes past the end of the half month are clipped to its last second,
+    // as TimeCodes are.
+    const locInMonth = hmBegin + Math.min(block * 200, hmLength - 1)
+
+    return mBegin.toInstant().add({ seconds: locInMonth })
 }
 ```

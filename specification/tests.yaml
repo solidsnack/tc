@@ -9,6 +9,11 @@
 #   `output`, which has as many characters as asked for: in the terms of the
 #   spec, `timecode(input, output.length)`. There are no tests for TC11.
 #
+# Bicentennial codes of every length are in the bc group. A bicentennial code
+# is read near a time, so its decode tests have a third value, `near`. Its
+# encode tests expect a code as long as `output`, as for TimeCodes. There are
+# no tests for BC9.
+#
 # Timestamps are in UTC, with as many digits of the fraction of the second as
 # needed, up to 9. All values are quoted, so that YAML reads them as strings.
 #
@@ -434,6 +439,152 @@ tcn:
           output: '1969ZZNLZ9.999999999'
         - input: '0000-01-01T00:00:00.000000001Z'
           output: '0000ABBBB0.000000001'
+
+bc:
+    decode:
+        # Spec examples.
+        - input: 'Q9PJ'
+          near: '2026-10-24T00:00:00Z'
+          output: '1969-07-20T16:16:40Z'
+        - input: 'A0AB'
+          near: '2026-10-24T00:00:00Z'
+          output: '2000-01-01T00:00:00Z'
+        - input: 'C6VD'
+          near: '2026-10-24T00:00:00Z'
+          output: '2026-10-17T08:03:20Z'
+        # The year: B1 carries the tens, and B2 the years. Read near 2026,
+        # the codes stand for the years from 1926 to 2125.
+        - input: 'A0'
+          near: '2026-10-24T00:00:00Z'
+          output: '2000-01-01T00:00:00Z'
+        - input: 'A9'
+          near: '2026-10-24T00:00:00Z'
+          output: '2009-01-01T00:00:00Z'
+        - input: 'B0'
+          near: '2026-10-24T00:00:00Z'
+          output: '2010-01-01T00:00:00Z'
+        - input: 'C6'
+          near: '2026-10-24T00:00:00Z'
+          output: '2026-01-01T00:00:00Z'
+        - input: 'K0'
+          near: '2026-10-24T00:00:00Z'
+          output: '2100-01-01T00:00:00Z'
+        - input: 'M5'
+          near: '2026-10-24T00:00:00Z'
+          output: '2125-01-01T00:00:00Z'
+        - input: 'M6'
+          near: '2026-10-24T00:00:00Z'
+          output: '1926-01-01T00:00:00Z'
+        - input: 'T9'
+          near: '2026-10-24T00:00:00Z'
+          output: '1999-01-01T00:00:00Z'
+        # Read near other times: up to 100 years before, and less than 100
+        # years after.
+        - input: 'C6VD'
+          near: '1950-01-01T00:00:00Z'
+          output: '2026-10-17T08:03:20Z'
+        - input: 'C6VD'
+          near: '2130-01-01T00:00:00Z'
+          output: '2226-10-17T08:03:20Z'
+        - input: 'C6'
+          near: '2126-06-01T00:00:00Z'
+          output: '2026-01-01T00:00:00Z'
+        - input: 'C6'
+          near: '1926-06-01T00:00:00Z'
+          output: '1826-01-01T00:00:00Z'
+        # The calendar of the year read: codes past the end of the half month
+        # are read as its last second.
+        - input: 'A0DZ'
+          near: '2026-10-24T00:00:00Z'
+          output: '2000-02-29T23:59:59Z'
+        - input: 'A0DZ'
+          near: '2200-01-01T00:00:00Z'
+          output: '2200-02-28T23:59:59Z'
+        - input: 'K0DZ'
+          near: '2026-10-24T00:00:00Z'
+          output: '2100-02-28T23:59:59Z'
+        # BC3, BC6, BC8, and fractions of the second.
+        - input: 'C6V'
+          near: '2026-10-24T00:00:00Z'
+          output: '2026-10-16T12:00:00Z'
+        - input: 'C6VDJB'
+          near: '2026-10-24T00:00:00Z'
+          output: '2026-10-17T14:23:20Z'
+        - input: 'C6VDJBD5'
+          near: '2026-10-24T00:00:00Z'
+          output: '2026-10-17T14:23:45Z'
+        - input: 'C6VDJBD5.25'
+          near: '2026-10-24T00:00:00Z'
+          output: '2026-10-17T14:23:45.25Z'
+        - input: 'T9ZZNLZ9.999999999'
+          near: '2026-10-24T00:00:00Z'
+          output: '1999-12-31T23:59:59.999999999Z'
+    encode:
+        # Spec examples.
+        - input: '1969-07-20T20:17:40Z'
+          output: 'Q9PJ'
+        - input: '2000-01-01T00:00:00Z'
+          output: 'A0AB'
+        - input: '2026-10-16T11:59:59Z'
+          output: 'C6UZ'
+        - input: '2026-10-16T12:00:00Z'
+          output: 'C6VB'
+        - input: '2026-10-17T14:23:45Z'
+          output: 'C6VD'
+        # The variations in the spec: every length but 9.
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: 'B9'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: 'B9V'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: 'B9VG'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: 'B9VGG'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: 'B9VGGY'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: 'B9VGGYH'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: 'B9VGGYH0'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: 'B9VGGYH0.9'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: 'B9VGGYH0.99'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: 'B9VGGYH0.992'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: 'B9VGGYH0.9926'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: 'B9VGGYH0.99261'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: 'B9VGGYH0.992615'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: 'B9VGGYH0.9926159'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: 'B9VGGYH0.99261596'
+        - input: '2019-10-19T05:20:50.992615967Z'
+          output: 'B9VGGYH0.992615967'
+        # The cycle repeats every 200 years.
+        - input: '1999-12-31T23:59:59Z'
+          output: 'T9ZZNLZ9'
+        - input: '2000-01-01T00:00:00Z'
+          output: 'A0ABBBB0'
+        - input: '2200-03-01T00:00:00Z'
+          output: 'A0EBBBB0'
+        - input: '0000-01-01T00:00:00Z'
+          output: 'A0ABBBB0'
+        - input: '9999-12-31T23:59:59Z'
+          output: 'T9ZZNLZ9'
+        # B2 carries into B1.
+        - input: '2009-12-31T23:59:59Z'
+          output: 'A9ZZNLZ9'
+        - input: '2010-01-01T00:00:00Z'
+          output: 'B0ABBBB0'
+        # Leap years.
+        - input: '2024-02-29T12:00:00Z'
+          output: 'C4DWNQB0'
+        - input: '2100-02-28T23:59:59Z'
+          output: 'K0DVZFZ9'
 
 leap-seconds:
     # Every leap second so far. Each takes the next second in the count after
