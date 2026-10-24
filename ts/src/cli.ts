@@ -164,6 +164,24 @@ const parser = or(
         },
     ),
     command(
+        'bc5',
+        object({ command: constant('bc5'), time: now() }),
+        {
+            brief: message`Print a time as a BC5 code: about an hour, in a ${
+                text('cycle of 200 years.')
+            }`,
+        },
+    ),
+    command(
+        'bc8',
+        object({ command: constant('bc8'), time: now() }),
+        {
+            brief: message`Print a time as a BC8 code: the second, in a ${
+                text('cycle of 200 years.')
+            }`,
+        },
+    ),
+    command(
         'bc',
         object({
             command: constant('bc'),
@@ -234,6 +252,10 @@ const line = (() => {
             return config.time.display(config.digits)
         case 'bc4':
             return config.time.bc4()
+        case 'bc5':
+            return config.time.bc(5)
+        case 'bc8':
+            return config.time.bc(8)
         case 'bc':
             return config.time.bc(config.digits)
         case 'parse': {
