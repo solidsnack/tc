@@ -2,15 +2,16 @@
 
 Small ports of the TimeCode specification, `../specification/index.md`. Most
 have a way to encode a time, at any length or as a TC5, TC8 or TCX, and a way
-to parse a code; the Bash port prints the current time, as a TC5, TC8, TCX or
-BC4. Each is checked against `../specification/tests.yaml`.
+to parse a code; the Bash port prints a time, by default the current time, as
+a TC5, TC8, TCX, BC4, BC5 or BC8. Each is checked against
+`../specification/tests.yaml`.
 
-| Port          | Encode                          | Parse            |
-| ------------- | ------------------------------- | ---------------- |
-| `es5/`        | `encode`, `tc5`, `tc8`, `tcx`   | `decode`         |
-| `sql-pg/`     | `timecode`, `tc5`, `tc8`, `tcx` | `timecode_parse` |
-| `sql-duckdb/` | `timecode`, `tc5`, `tc8`, `tcx` | `timecode_parse` |
-| `bash/`       | `tc5`, `tc8`, `tcx`, `bc4`      |                  |
+| Port          | Encode                                   | Parse            |
+| ------------- | ---------------------------------------- | ---------------- |
+| `es5/`        | `encode`, `tc5`, `tc8`, `tcx`            | `decode`         |
+| `sql-pg/`     | `timecode`, `tc5`, `tc8`, `tcx`          | `timecode_parse` |
+| `sql-duckdb/` | `timecode`, `tc5`, `tc8`, `tcx`          | `timecode_parse` |
+| `bash/`       | `tc5`, `tc8`, `tcx`, `bc4`, `bc5`, `bc8` |                  |
 
 Apart from Bash's, the encoders take a time, `t`. `encode(t, n)` and
 `timecode(t, n)` give a code of `n` digits, from 4 to 20, or with the
@@ -22,8 +23,8 @@ seconds, are read as the last second of the half month.
 
 Each port also gives the revision of the specification it follows:
 `timecode.SPEC_VERSION` in ECMAScript 5, `timecode_spec_version()` in SQL
-and `SPEC_VERSION` in Bash. The Bash port follows 1.1.0, for its BC4; the
-others follow 1.0.0, without the bicentennial codes of 1.1.0.
+and `SPEC_VERSION` in Bash. The Bash port follows 1.1.0, for its bicentennial
+codes; the others follow 1.0.0, without them.
 
 ## ECMAScript 5
 
@@ -73,18 +74,26 @@ well.
 ## Bash
 
 ```sh
-bash/timecode.bash               # the current time, as a TC8: 2026VDJB
-bash/timecode.bash tcx           # 2026VDJBD5
-bash/timecode.bash bc4           # C6VD
-bash/timecode.bash tcx --extend  # to the millisecond: 2026VDJBD5.250
+bash/timecode.bash                           # the current time, as a TC8
+bash/timecode.bash tcx 2026-10-17T14:23:45Z  # 2026VDJBD5
+bash/timecode.bash bc5 2026-10-17T14:23:45Z  # C6VDJ
+bash/timecode.bash bc8                       # the current time, as C6VDJBD5
+bash/timecode.bash tcx --extend              # the current time, to the ms
 ```
 
-As `bash/README.md` says, `tc5`, `tc8` and `bc4` take no arguments, and
-`tcx` takes only `--extend`, which makes it print the current time to the
-millisecond, as a TC14. Each function stands alone, so it can be copied into
-another script as it is. It reads the time with one call to `date`, which
-must know `%N` for `--extend`, as GNU date and the date of macOS 26 do. The
-script needs Bash 3.2 or later.
+As `bash/README.md` says, each function takes a timestamp in UTC,
+`yyyy-mm-ddTHH:MM:SSZ`, or prints the current time without one. `tcx` also
+takes `--extend`, before any timestamp, to print the time to the
+millisecond, as a TC14, such as `2026VDJBD5.250`; a timestamp has whole
+seconds, so its milliseconds are `000`. Each field of a timestamp must be in
+range, though the day is not checked against the length of its month, and
+second 60, for a leap second, counts as the next second, as in the
+specification.
+
+Each function stands alone, so it can be copied into another script as it
+is. It reads the current time with one call to `date`, which must know `%N`
+for `--extend`, as GNU date and the date of macOS 26 do. The script needs
+Bash 3.2 or later.
 
 ## Precision
 
@@ -105,5 +114,6 @@ npm test
 The PostgreSQL tests connect with `psql` and the usual `PG*` environment
 variables, and make the functions in a transaction that is rolled back. The
 DuckDB tests use the `duckdb` command, in memory. Either is skipped when its
-database cannot be reached. The Bash tests run the script with a `date`
-command of their own, which gives the time of each case.
+database cannot be reached. The Bash tests give the script the timestamp
+of each case, and run it with a `date` command of their own, which gives
+the fraction of the second too.

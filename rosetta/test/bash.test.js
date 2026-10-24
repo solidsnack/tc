@@ -1,6 +1,7 @@
 // Runs the cases in specification/tests.yaml through the Bash port. The
-// port prints only the current time, so it is run with a date command of
-// the tests' own, which gives the time of each case.
+// port takes timestamps with whole seconds, and prints the current time to
+// the millisecond, so for that it is run with a date command of the tests'
+// own, which gives the time of each case.
 const assert = require('node:assert/strict')
 const { spawnSync } = require('node:child_process')
 const fs = require('node:fs')
@@ -43,6 +44,11 @@ function fieldsOf(t) {
     return [...fields, fraction.padEnd(9, '0')].join(' ')
 }
 
+// A timestamp without its fraction of the second, as the port takes it.
+function wholeSecondOf(t) {
+    return t.replace(/[.][0-9]+Z$/, 'Z')
+}
+
 // Runs a command with the clock at a time, given as its fields.
 function run(now, command, ...args) {
     return spawnSync(command, args, {
@@ -51,7 +57,7 @@ function run(now, command, ...args) {
     })
 }
 
-// The code the script prints for a time, with a command and its flag.
+// The code the script prints, with the clock at a time.
 function print(now, ...args) {
     const { status, stdout, stderr } = run(now, script, ...args)
 
@@ -71,9 +77,12 @@ function assertAgrees(code, expected) {
 
 // The length of the code each command prints.
 const lengths = { tc5: 5, tc8: 8, tcx: 10 }
+const bcLengths = { bc4: 4, bc5: 5, bc8: 8 }
 
-// The date of a system that keeps leap seconds prints 23:59:60 for one,
-// which the port counts as the next second, as the specification does.
+// The places a code has before the fraction of the second do not depend on
+// it, so the timestamps given to the port drop it. The clock keeps it, for
+// tcx --extend. A leap second is second 60, which the port counts as the
+// next second, as the specification does.
 for (const group of [...groups, 'leap-seconds']) {
     describe(`tests.yaml: ${group}`, () => {
         for (const { input, output } of suite[group].encode) {
@@ -82,7 +91,7 @@ for (const group of [...groups, 'leap-seconds']) {
                 const extended = print(now, 'tcx', '--extend')
 
                 for (const [command, n] of Object.entries(lengths)) {
-                    const code = print(now, command)
+                    const code = print(now, command, wholeSecondOf(input))
 
                     assert.equal(code.length, n)
                     assertAgrees(code, output)
@@ -98,37 +107,102 @@ for (const group of [...groups, 'leap-seconds']) {
 describe('tests.yaml: bc', () => {
     for (const { input, output } of suite.bc.encode) {
         test(`encode ${input}`, () => {
-            const code = print(fieldsOf(input), 'bc4')
+            for (const [command, n] of Object.entries(bcLengths)) {
+                const code = print('', command, wholeSecondOf(input))
 
-            assert.equal(code.length, 4)
-            assertAgrees(code, output)
+                assert.equal(code.length, n)
+                assertAgrees(code, output)
+            }
         })
     }
 })
 
 const t = fieldsOf('2026-10-17T14:23:45.25Z')
 
-test('without a command, the script prints a TC8', () => {
-    assert.equal(print(t), '2026VDJB')
+// The codes of the time t, with and without a timestamp, which has whole
+// seconds.
+const codes = [
+    ['tc5', '2026V'],
+    ['tc8', '2026VDJB'],
+    ['tcx', '2026VDJBD5'],
+    ['tcx --extend', '2026VDJBD5.250'],
+    ['tcx --extend 2026-10-17T14:23:45Z', '2026VDJBD5.000'],
+    ['bc4', 'C6VD'],
+    ['bc5', 'C6VDJ'],
+    ['bc8', 'C6VDJBD5'],
+]
+
+test('each command prints the current time, or the time it is given', () => {
+    for (const [call, code] of codes) {
+        const args = call.split(' ')
+
+        assert.equal(print(t, ...args), code, call)
+
+        if (args.length === 1) {
+            const given = print('', ...args, '2026-10-17T14:23:45Z')
+
+            assert.equal(given, code.slice(0, 10), call)
+        }
+    }
 })
 
-test('only tcx takes an argument, --extend', () => {
+test('without a command, the script prints a TC8', () => {
+    assert.equal(print(t), '2026VDJB')
+    assert.equal(print('', '1969-07-20T20:17:40Z'), '1969PJFW')
+})
+
+// What each command prints when it is given the wrong arguments.
+function usageOf(command) {
+    const flag = command === 'tcx' ? ' [--extend]' : ''
+
+    return `Usage: ${command}${flag} [yyyy-mm-ddTHH:MM:SSZ]\n`
+}
+
+test('the commands take one timestamp, and tcx --extend before it', () => {
+    const given = '2026-10-17T14:23:45Z'
+    const timestamps = [
+        '2026-13-17T14:23:45Z',
+        '2026-00-17T14:23:45Z',
+        '2026-10-32T14:23:45Z',
+        '2026-10-00T14:23:45Z',
+        '2026-10-17T24:23:45Z',
+        '2026-10-17T14:60:45Z',
+        '2026-10-17T14:23:61Z',
+        '2026-10-17T14:23:45.25Z',
+        '2026-10-17T14:23Z',
+        '2026-10-17T14:23:45+00:00',
+        '2026-10-17t14:23:45z',
+        '26-10-17T14:23:45Z',
+        ` ${given}`,
+    ]
     const refusals = [
-        [['tc5', '--extend'], 'Usage: tc5'],
-        [['tc8', '8'], 'Usage: tc8'],
-        [['bc4', '--extend'], 'Usage: bc4'],
-        [['tcx', '--extended'], 'Usage: tcx [--extend]'],
-        [['tcx', '--extend', '--extend'], 'Usage: tcx [--extend]'],
-        [['--extend'], 'Usage: tc8'],
+        ['tc5', '--extend'],
+        ['bc4', '--extend'],
+        ['bc5', '2026-10-17'],
+        ['bc8', '--extend'],
+        ['tcx', '--extended'],
+        ['tcx', '--extend', '--extend'],
+        ['tcx', given, '--extend'],
+        ['tc8', given, given],
     ]
 
-    for (const [args, usage] of refusals) {
+    // Each function has its own pattern for a timestamp.
+    for (const command of ['tc5', 'tc8', 'tcx', 'bc4', 'bc5', 'bc8']) {
+        for (const timestamp of timestamps) {
+            refusals.push([command, timestamp])
+        }
+    }
+
+    for (const args of refusals) {
         const { status, stdout, stderr } = run(t, script, ...args)
 
         assert.equal(status, 2, args.join(' '))
         assert.equal(stdout, '')
-        assert.equal(stderr, `${usage}\n`)
+        assert.equal(stderr, usageOf(args[0]))
     }
+
+    // Without a command, the script runs tc8.
+    assert.equal(run(t, script, '--extend').stderr, usageOf('tc8'))
 })
 
 test('--extend needs a date that gives the fraction of the second', () => {
@@ -149,7 +223,7 @@ function definitionOf(name) {
     const start = source.indexOf(`function ${name} {\n`)
     const end = source.indexOf('\n}\n', start) + 3
     const definition = source.slice(start, end)
-    const words = [...new Set(definition.match(/[a-z_][a-z0-9_]*/g))]
+    const words = [...new Set(definition.match(/[a-z][a-z0-9_]*/g))]
 
     return { definition, words }
 }
@@ -158,15 +232,7 @@ function definitionOf(name) {
 // script sets the options this one does, and leaves no variables behind:
 // declare would print them.
 test('each function stands alone', () => {
-    const calls = [
-        ['tc5', '2026V'],
-        ['tc8', '2026VDJB'],
-        ['tcx', '2026VDJBD5'],
-        ['tcx --extend', '2026VDJBD5.250'],
-        ['bc4', 'C6VD'],
-    ]
-
-    for (const [call, code] of calls) {
+    for (const [call, code] of codes) {
         const { definition, words } = definitionOf(call.split(' ')[0])
 
         assert.ok(words.includes('half_month'), call)

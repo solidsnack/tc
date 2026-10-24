@@ -11,31 +11,42 @@ function main {
     tc8 "$@"
 }
 
-# Each function below prints the current time. Each stands alone, using
-# nothing but its own definitions, so that it can be copied into another
-# script as it is, and reads the clock with one call to date.
+# Each function below prints the time it is given, as a timestamp in UTC
+# such as 2026-10-17T14:23:45Z, or else the current time, which it reads
+# with one call to date. Second 60 is for a leap second. Each stands alone,
+# using nothing but its own definitions, so that it can be copied into
+# another script as it is.
 
-# The current time as a TC5, such as 2026V.
+# A time as a TC5, such as 2026V.
 function tc5 {
     local p5='ABCDEFGHIJKLOPQRSTUVWXYZ'
-    local now year month day hour
+    # The start of the second half month in seconds. 372 hours is 15.5 days.
+    local hm2_begin=$(( 372 * 3600 ))
+    local timestamp='^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])'
+    timestamp+='T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)Z$'
+    local now year month day hour minute second
 
-    if [[ "$#" -gt 0 ]]
+    if [[ "$#" -eq 0 ]]
     then
-        printf '%s\n' 'Usage: tc5' >&2
+        now="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return
+    else
+        now="$1"
+    fi
+
+    if [[ "$#" -gt 1 || ! "$now" =~ $timestamp ]]
+    then
+        printf '%s\n' 'Usage: tc5 [yyyy-mm-ddTHH:MM:SSZ]' >&2
         return 2
     fi
 
-    now="$(date -u '+%Y %m %d %H')" || return
-    read -r year month day hour <<< "$now"
+    read -r year month day hour minute second <<< "${BASH_REMATCH[*]:1}"
 
-    # The hours since the start of the month. The fields have leading zeros,
-    # so they are read in base 10.
-    local hours_in_month=$(( ((10#$day - 1) * 24) + 10#$hour ))
+    # The fields have leading zeros, so they are read in base 10.
+    local loc_in_month=$(( ((10#$day - 1) * 24 * 3600) +
+        (10#$hour * 3600) + (10#$minute * 60) + 10#$second ))
     local half_month=$(( 2 * (10#$month - 1) ))
 
-    # The second half month begins after 372 hours, which is 15.5 days.
-    if [[ "$hours_in_month" -ge 372 ]]
+    if [[ "$loc_in_month" -ge "$hm2_begin" ]]
     then
         half_month=$(( half_month + 1 ))
     fi
@@ -43,7 +54,7 @@ function tc5 {
     printf '%s\n' "$year${p5:half_month:1}"
 }
 
-# The current time as a TC8, such as 2026VDJB.
+# A time as a TC8, such as 2026VDJB.
 function tc8 {
     local p5='ABCDEFGHIJKLOPQRSTUVWXYZ'
     local p6='BDFGHJKLMPQRSTVWXYZ'
@@ -51,16 +62,24 @@ function tc8 {
     local p8='BCDFGHJLMNPQRSVWXYZ'
     # The start of the second half month in seconds. 372 hours is 15.5 days.
     local hm2_begin=$(( 372 * 3600 ))
+    local timestamp='^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])'
+    timestamp+='T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)Z$'
     local now year month day hour minute second
 
-    if [[ "$#" -gt 0 ]]
+    if [[ "$#" -eq 0 ]]
     then
-        printf '%s\n' 'Usage: tc8' >&2
+        now="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return
+    else
+        now="$1"
+    fi
+
+    if [[ "$#" -gt 1 || ! "$now" =~ $timestamp ]]
+    then
+        printf '%s\n' 'Usage: tc8 [yyyy-mm-ddTHH:MM:SSZ]' >&2
         return 2
     fi
 
-    now="$(date -u '+%Y %m %d %H %M %S')" || return
-    read -r year month day hour minute second <<< "$now"
+    read -r year month day hour minute second <<< "${BASH_REMATCH[*]:1}"
 
     # The fields have leading zeros, so they are read in base 10.
     local loc_in_month=$(( ((10#$day - 1) * 24 * 3600) +
@@ -80,9 +99,10 @@ function tc8 {
         "${p6:block / 361:1}" "${p7:block / 19 % 19:1}" "${p8:block % 19:1}"
 }
 
-# The current time as a TCX, such as 2026VDJBD5, or with --extend, as a
-# TC14, to the millisecond, such as 2026VDJBD5.250. The fraction of the
-# second needs a date that knows %N.
+# A time as a TCX, such as 2026VDJBD5, or with --extend, as a TC14, to the
+# millisecond, such as 2026VDJBD5.250. A timestamp has whole seconds, so
+# only the current time has a fraction of the second, for which date must
+# know %N.
 function tcx {
     local p5='ABCDEFGHIJKLOPQRSTUVWXYZ'
     local p6='BDFGHJKLMPQRSTVWXYZ'
@@ -91,20 +111,34 @@ function tcx {
     local p9='BCDEFHIJLMNOPQUVWXYZ'
     # The start of the second half month in seconds. 372 hours is 15.5 days.
     local hm2_begin=$(( 372 * 3600 ))
+    local timestamp='^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])'
+    timestamp+='T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)Z$'
     local extend=false
-    local now year month day hour minute second nanoseconds
+    local nanoseconds='000000000'
+    local now year month day hour minute second
 
-    if [[ "$#" -eq 1 && "$1" == --extend ]]
+    if [[ "${1:-}" == --extend ]]
     then
         extend=true
-    elif [[ "$#" -gt 0 ]]
+        shift
+    fi
+
+    if [[ "$#" -eq 0 ]]
     then
-        printf '%s\n' 'Usage: tcx [--extend]' >&2
+        now="$(date -u '+%Y-%m-%dT%H:%M:%SZ %N')" || return
+        nanoseconds="${now#* }"
+        now="${now%% *}"
+    else
+        now="$1"
+    fi
+
+    if [[ "$#" -gt 1 || ! "$now" =~ $timestamp ]]
+    then
+        printf '%s\n' 'Usage: tcx [--extend] [yyyy-mm-ddTHH:MM:SSZ]' >&2
         return 2
     fi
 
-    now="$(date -u '+%Y %m %d %H %M %S %N')" || return
-    read -r year month day hour minute second nanoseconds <<< "$now"
+    read -r year month day hour minute second <<< "${BASH_REMATCH[*]:1}"
 
     if [[ "$extend" == true && ! "$nanoseconds" =~ ^[0-9]{9}$ ]]
     then
@@ -138,23 +172,31 @@ function tcx {
     fi
 }
 
-# The current time as a BC4, such as C6VD.
+# A time as a BC4, such as C6VD.
 function bc4 {
     local b1='ABCDEFGHIJKLMNOPQRST'
     local p5='ABCDEFGHIJKLOPQRSTUVWXYZ'
     local p6='BDFGHJKLMPQRSTVWXYZ'
     # The start of the second half month in seconds. 372 hours is 15.5 days.
     local hm2_begin=$(( 372 * 3600 ))
+    local timestamp='^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])'
+    timestamp+='T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)Z$'
     local now year month day hour minute second
 
-    if [[ "$#" -gt 0 ]]
+    if [[ "$#" -eq 0 ]]
     then
-        printf '%s\n' 'Usage: bc4' >&2
+        now="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return
+    else
+        now="$1"
+    fi
+
+    if [[ "$#" -gt 1 || ! "$now" =~ $timestamp ]]
+    then
+        printf '%s\n' 'Usage: bc4 [yyyy-mm-ddTHH:MM:SSZ]' >&2
         return 2
     fi
 
-    now="$(date -u '+%Y %m %d %H %M %S')" || return
-    read -r year month day hour minute second <<< "$now"
+    read -r year month day hour minute second <<< "${BASH_REMATCH[*]:1}"
 
     # The fields have leading zeros, so they are read in base 10.
     local loc_in_month=$(( ((10#$day - 1) * 24 * 3600) +
@@ -175,6 +217,106 @@ function bc4 {
 
     printf '%s%s%s%s\n' "${b1:years / 10:1}" "$(( years % 10 ))" \
         "${p5:half_month:1}" "${p6:block / 361:1}"
+}
+
+# A time as a BC5, such as C6VDJ.
+function bc5 {
+    local b1='ABCDEFGHIJKLMNOPQRST'
+    local p5='ABCDEFGHIJKLOPQRSTUVWXYZ'
+    local p6='BDFGHJKLMPQRSTVWXYZ'
+    local p7='BCDFGHJKLMNPQRVWXYZ'
+    # The start of the second half month in seconds. 372 hours is 15.5 days.
+    local hm2_begin=$(( 372 * 3600 ))
+    local timestamp='^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])'
+    timestamp+='T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)Z$'
+    local now year month day hour minute second
+
+    if [[ "$#" -eq 0 ]]
+    then
+        now="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return
+    else
+        now="$1"
+    fi
+
+    if [[ "$#" -gt 1 || ! "$now" =~ $timestamp ]]
+    then
+        printf '%s\n' 'Usage: bc5 [yyyy-mm-ddTHH:MM:SSZ]' >&2
+        return 2
+    fi
+
+    read -r year month day hour minute second <<< "${BASH_REMATCH[*]:1}"
+
+    # The fields have leading zeros, so they are read in base 10.
+    local loc_in_month=$(( ((10#$day - 1) * 24 * 3600) +
+        (10#$hour * 3600) + (10#$minute * 60) + 10#$second ))
+    local half_month=$(( 2 * (10#$month - 1) ))
+    local loc_in_half_month="$loc_in_month"
+
+    if [[ "$loc_in_month" -ge "$hm2_begin" ]]
+    then
+        half_month=$(( half_month + 1 ))
+        loc_in_half_month=$(( loc_in_month - hm2_begin ))
+    fi
+
+    # The block of 200 seconds, of which P6 and P7 show the first places,
+    # and the place of the year in the cycle of 200 years, from 0 to 199.
+    local block=$(( loc_in_half_month / 200 ))
+    local years=$(( 10#$year % 200 ))
+
+    printf '%s%s%s%s%s\n' "${b1:years / 10:1}" "$(( years % 10 ))" \
+        "${p5:half_month:1}" "${p6:block / 361:1}" "${p7:block / 19 % 19:1}"
+}
+
+# A time as a BC8, such as C6VDJBD5.
+function bc8 {
+    local b1='ABCDEFGHIJKLMNOPQRST'
+    local p5='ABCDEFGHIJKLOPQRSTUVWXYZ'
+    local p6='BDFGHJKLMPQRSTVWXYZ'
+    local p7='BCDFGHJKLMNPQRVWXYZ'
+    local p8='BCDFGHJLMNPQRSVWXYZ'
+    local p9='BCDEFHIJLMNOPQUVWXYZ'
+    # The start of the second half month in seconds. 372 hours is 15.5 days.
+    local hm2_begin=$(( 372 * 3600 ))
+    local timestamp='^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])'
+    timestamp+='T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)Z$'
+    local now year month day hour minute second
+
+    if [[ "$#" -eq 0 ]]
+    then
+        now="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return
+    else
+        now="$1"
+    fi
+
+    if [[ "$#" -gt 1 || ! "$now" =~ $timestamp ]]
+    then
+        printf '%s\n' 'Usage: bc8 [yyyy-mm-ddTHH:MM:SSZ]' >&2
+        return 2
+    fi
+
+    read -r year month day hour minute second <<< "${BASH_REMATCH[*]:1}"
+
+    # The fields have leading zeros, so they are read in base 10.
+    local loc_in_month=$(( ((10#$day - 1) * 24 * 3600) +
+        (10#$hour * 3600) + (10#$minute * 60) + 10#$second ))
+    local half_month=$(( 2 * (10#$month - 1) ))
+    local loc_in_half_month="$loc_in_month"
+
+    if [[ "$loc_in_month" -ge "$hm2_begin" ]]
+    then
+        half_month=$(( half_month + 1 ))
+        loc_in_half_month=$(( loc_in_month - hm2_begin ))
+    fi
+
+    local block=$(( loc_in_half_month / 200 ))
+    local second_in_block=$(( loc_in_half_month % 200 ))
+    # The place of the year in the cycle of 200 years, from 0 to 199.
+    local years=$(( 10#$year % 200 ))
+    local code="${b1:years / 10:1}$(( years % 10 ))${p5:half_month:1}"
+    code+="${p6:block / 361:1}${p7:block / 19 % 19:1}${p8:block % 19:1}"
+    code+="${p9:second_in_block / 10:1}$(( second_in_block % 10 ))"
+
+    printf '%s\n' "$code"
 }
 
 ##################################################################### Utilities
