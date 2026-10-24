@@ -39,6 +39,8 @@ and Rust, have formatters that can do this for you.)
 4. Use dashes (`-`) in function names instead of underscores, because functions
    can be directly called as subcommands.
 5. Prefer lowercase variable names with underscores.
+6. Bash code should be written, by default, against Bash 3.2, to ensure
+   compatibility with systems that are stuck on older versions of Bash.
 
 #### Preferred Forms
 
