@@ -71,6 +71,32 @@ class TimeCode private constructor(
     }
 
     /**
+     * Display the TimeCode in BC4 format: the place of its year in a cycle
+     * of 200 years, the half month and the first place of the block.
+     */
+    fun bc4(): String = bc(4)
+
+    /**
+     * Display the TimeCode as a bicentennial code, with the precision of the
+     * encoded value: the TimeCode with its year written as its place in a
+     * cycle of 200 years.
+     */
+    fun bc(): String = place() + display().substring(4)
+
+    /**
+     * Display the TimeCode as a bicentennial code with the requested number
+     * of digits, from 2 to 18. As in the specification, BC9 is displayed
+     * like BC10.
+     */
+    fun bc(digits: Int): String {
+        require(digits in 2..18) {
+            "Bicentennial codes have from 2 to 18 digits."
+        }
+
+        return place() + display(digits + 2).substring(4)
+    }
+
+    /**
      * The start of the time the TimeCode stands for.
      */
     fun toInstant(): Instant {
@@ -109,6 +135,13 @@ class TimeCode private constructor(
             "." + "$nanoseconds".padStart(9, '0')
     }
 
+    // The place of the year in its cycle of 200 years, in B1 and B2.
+    private fun place(): String {
+        val years = descriptor.year % 200
+
+        return "${b1[years / 10]}${years % 10}"
+    }
+
     /**
      * The components of a TimeCode: the year, from 0 to 9999; the half
      * month, from 0 to 23; the block of 200 seconds within the half month,
@@ -130,6 +163,7 @@ class TimeCode private constructor(
         private const val p7: String = "BCDFGHJKLMNPQRVWXYZ"
         private const val p8: String = "BCDFGHJLMNPQRSVWXYZ"
         private const val p9: String = "BCDEFHIJLMNOPQUVWXYZ"
+        private const val b1: String = "ABCDEFGHIJKLMNOPQRST"
         private const val decimal: String = "0123456789"
 
         // The start of the second half month in seconds. 372 hours is 15.5
@@ -137,7 +171,7 @@ class TimeCode private constructor(
         private const val hm2Begin: Int = 372 * 3600
 
         private val fractionDigits = Regex("[0-9]{1,9}")
-        private val trailingZeros = Regex("\\.?0+$")
+        private val trailingZeros = Regex("[.]?0+$")
 
         private val order = compareBy<Descriptor>(
             { it.year },
@@ -243,6 +277,45 @@ class TimeCode private constructor(
         fun parse(code: String): TimeCode = of(read(code))
 
         /**
+         * Read a bicentennial code of any length, from BC2 to a BC8 with a
+         * fraction of the second. Of the years with its place in the cycle
+         * of 200 years, it stands for the one nearest the year of near, by
+         * default now: no more than 100 years before it, and less than 100
+         * after. As with a TimeCode, it stands for the start of the time it
+         * covers.
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun parseBC(code: String, near: TimeCode = now()): TimeCode {
+            val places = code.substringBefore('.')
+
+            require(places.length in 2..8) {
+                "Bicentennial codes have from 2 to 8 places."
+            }
+            require(places.length == 8 || !code.contains('.')) {
+                "Only a BC8 may have a fraction of the second."
+            }
+
+            // The digit a place of the year stands for.
+            fun digit(chars: String, i: Int): Int {
+                val n = chars.indexOf(places[i])
+
+                require(n >= 0) { "${places[i]} is not allowed in B${i + 1}." }
+
+                return n
+            }
+
+            val years = (10 * digit(b1, 0)) + digit(decimal, 1)
+            val earliest = near.descriptor.year - 100
+            val year = earliest + (years - earliest).mod(200)
+
+            require(year in 0..9999) { "TimeCodes support four digit years." }
+
+            // The rest is read as the TimeCode with the year written out.
+            return parse("$year".padStart(4, '0') + code.substring(2))
+        }
+
+        /**
          * Present the time as a TC5 code.
          */
         @JvmStatic
@@ -275,6 +348,27 @@ class TimeCode private constructor(
         @JvmStatic
         fun tc(instant: Instant, digits: Int): String =
             of(instant).display(digits)
+
+        /**
+         * Present the time as a BC4 code.
+         */
+        @JvmStatic
+        fun bc4(instant: Instant): String = of(instant).bc4()
+
+        /**
+         * Present the time as a bicentennial code, with the precision of the
+         * value.
+         */
+        @JvmStatic
+        fun bc(instant: Instant): String = of(instant).bc()
+
+        /**
+         * Present the time as a bicentennial code with the requested number
+         * of digits.
+         */
+        @JvmStatic
+        fun bc(instant: Instant, digits: Int): String =
+            of(instant).bc(digits)
 
         private fun inRange(name: String, value: Int, max: Int) {
             require(value in 0..max) { "The $name must be from 0 to $max." }

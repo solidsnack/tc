@@ -64,6 +64,46 @@ class SpecificationTest {
             dynamicContainer("tests.yaml: $name", decode + encode)
         }
 
+    // Bicentennial codes are read near a time, which each decode test gives.
+    @TestFactory
+    fun bc(): DynamicContainer {
+        val group = suite.getValue("bc")
+        val decode = group.getValue("decode").map { case ->
+            val input = case.getValue("input")
+            val near = case.getValue("near")
+            val output = case.getValue("output")
+
+            dynamicTest("decode $input near $near") {
+                val code = TimeCode.parseBC(
+                    input,
+                    TimeCode.of(Instant.parse(near)),
+                )
+                assertEquals(Instant.parse(output), code.toInstant())
+            }
+        }
+        val encode = group.getValue("encode").map { case ->
+            val input = case.getValue("input")
+            val output = case.getValue("output")
+
+            dynamicTest("encode $input") {
+                val t = Instant.parse(input)
+                val n = output.length
+                val codes = listOf(TimeCode.of(t).bc(n), TimeCode.bc(t, n)) +
+                    if (n == 4) {
+                        listOf(TimeCode.of(t).bc4(), TimeCode.bc4(t))
+                    } else {
+                        listOf()
+                    }
+
+                for (code in codes) {
+                    assertEquals(output, code)
+                }
+            }
+        }
+
+        return dynamicContainer("tests.yaml: bc", decode + encode)
+    }
+
     // java.time has no leap seconds: Instant.parse reads 23:59:60 as
     // 23:59:59. TimeCodes treat a leap second as the last second of its half
     // month, so both ways round, the leap seconds land on 23:59:59.

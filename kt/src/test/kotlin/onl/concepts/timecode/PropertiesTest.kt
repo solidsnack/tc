@@ -20,6 +20,7 @@ private const val p6 = "BDFGHJKLMPQRSTVWXYZ"
 private const val p7 = "BCDFGHJKLMNPQRVWXYZ"
 private const val p8 = "BCDFGHJLMNPQRSVWXYZ"
 private const val p9 = "BCDEFHIJLMNOPQUVWXYZ"
+private const val b1 = "ABCDEFGHIJKLMNOPQRST"
 private const val decimal = "0123456789"
 
 private val first = Instant.parse("0000-01-01T00:00:00Z")
@@ -74,6 +75,18 @@ class PropertiesTest {
     // Lengths of TimeCodes, from TC4 to TC20.
     @Provide
     fun digits(): Arbitrary<Int> = ints(4, 20)
+
+    // Lengths of bicentennial codes, from BC2 to BC18.
+    @Provide
+    fun bcDigits(): Arbitrary<Int> = ints(2, 18)
+
+    // Offsets of a year to read a bicentennial code near: no more than 100
+    // years after it, and less than 100 before.
+    @Provide
+    fun offsets(): Arbitrary<Int> = ints(-99, 100)
+
+    @Provide
+    fun years(): Arbitrary<Int> = ints(0, 9999)
 
     @Provide
     fun encoders(): Arbitrary<String> = Arbitraries.of("tc5", "tc8", "tcX")
@@ -254,5 +267,68 @@ class PropertiesTest {
         } else {
             assertEquals(d, read, label)
         }
+    }
+
+    // The place of a TimeCode's year in its cycle of 200 years.
+    private fun place(code: TimeCode): String {
+        val years = code.descriptor.year % 200
+
+        return "${b1[years / 10]}${years % 10}"
+    }
+
+    // The TimeCode of the start of a year.
+    private fun startOf(year: Int): TimeCode =
+        TimeCode.parse("$year".padStart(4, '0'))
+
+    @Property(tries = 2000)
+    fun `a bicentennial code is the TimeCode with the place of its year`(
+        @ForAll("instants") t: Instant,
+        @ForAll("bcDigits") n: Int,
+    ) {
+        val code = TimeCode.of(t)
+
+        assertEquals(
+            place(code) + code.display(n + 2).substring(4),
+            code.bc(n),
+        )
+        assertEquals(place(code) + code.display().substring(4), code.bc())
+        assertEquals(code.bc(4), code.bc4())
+    }
+
+    // Near a time no more than 100 years after it, or less than 100 before,
+    // a bicentennial code reads as the TimeCode it comes from does.
+    @Property(tries = 2000)
+    fun `a bicentennial code reads near its time as its TimeCode does`(
+        @ForAll("instants") t: Instant,
+        @ForAll("bcDigits") n: Int,
+        @ForAll("offsets") offset: Int,
+    ) {
+        val code = TimeCode.of(t)
+        val near = startOf((code.descriptor.year + offset).coerceIn(0, 9999))
+
+        assertEquals(
+            TimeCode.parse(code.display(n + 2)),
+            TimeCode.parseBC(code.bc(n), near),
+        )
+    }
+
+    @Property(tries = 2000)
+    fun `a bicentennial code reads as the nearest year in its cycle`(
+        @ForAll("instants") t: Instant,
+        @ForAll("years") nearYear: Int,
+    ) {
+        val code = TimeCode.of(t)
+        val read = try {
+            TimeCode.parseBC(code.bc4(), startOf(nearYear))
+        } catch (e: IllegalArgumentException) {
+            // The nearest year may be before 0000 or after 9999.
+            assertTrue(nearYear < 100 || nearYear >= 9900)
+            assertEquals("TimeCodes support four digit years.", e.message)
+            return
+        }
+        val year = read.descriptor.year
+
+        assertTrue(year - nearYear >= -100 && year - nearYear < 100)
+        assertEquals(code.descriptor.year % 200, year % 200)
     }
 }

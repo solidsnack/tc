@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "onl.concepts"
-version = "0.1.0"
+version = "1.1.0"
 description = "TimeCodes: sortable, short timestamps"
 
 repositories {

@@ -29,6 +29,9 @@ class JavaUsageTest {
         assertEquals("2026VDJBD5.25", code.display());
         assertEquals("2026VDJBD5.2", code.display(12));
         assertEquals("2026VDJBD5.25", code.toString());
+        assertEquals("C6VD", code.bc4());
+        assertEquals("C6VDJBD5.25", code.bc());
+        assertEquals("C6VDJBD5.2", code.bc(10));
     }
 
     @Test
@@ -39,6 +42,9 @@ class JavaUsageTest {
         assertEquals("2026VDJBD5.250", TimeCode.tcX(t, 3));
         assertEquals("2026VDJBD5.25", TimeCode.tc(t));
         assertEquals("2026VDJBD", TimeCode.tc(t, 9));
+        assertEquals("C6VD", TimeCode.bc4(t));
+        assertEquals("C6VDJBD5.25", TimeCode.bc(t));
+        assertEquals("C6VDJBD", TimeCode.bc(t, 7));
     }
 
     @Test
@@ -70,6 +76,17 @@ class JavaUsageTest {
     }
 
     @Test
+    void decodesBicentennialCodes() {
+        TimeCode near = TimeCode.parse("2130");
+
+        assertEquals(TimeCode.parse("2026VDJB"), TimeCode.parseBC("C6VDJB"));
+        assertEquals(
+            TimeCode.parse("2226VDJB"),
+            TimeCode.parseBC("C6VDJB", near)
+        );
+    }
+
+    @Test
     void sorts() {
         List<TimeCode> codes = new ArrayList<>();
         codes.add(TimeCode.parse("2026VDJBD5"));
@@ -96,6 +113,38 @@ class JavaUsageTest {
         assertThrows(
             IllegalArgumentException.class,
             () -> TimeCode.of(new TimeCode.Descriptor(2026, 24, 0, 0, 0))
+        );
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> TimeCode.of(t).bc(19)
+        );
+    }
+
+    @Test
+    void rejectsBicentennialCodes() {
+        TimeCode near = TimeCode.parse("2026");
+        String[][] errors = {
+            {"C", "Bicentennial codes have from 2 to 8 places."},
+            {"C6VDJBD5B", "Bicentennial codes have from 2 to 8 places."},
+            {"C6VD.5", "Only a BC8 may have a fraction of the second."},
+            {"U6VD", "U is not allowed in B1."},
+            {"CXVD", "X is not allowed in B2."},
+            {"C6MD", "M is not allowed in P5."},
+            {"C6VDJBD5.", "Fractions of the second have 1 to 9 digits."},
+        };
+
+        for (String[] error : errors) {
+            IllegalArgumentException e = assertThrows(
+                IllegalArgumentException.class,
+                () -> TimeCode.parseBC(error[0], near)
+            );
+
+            assertEquals(error[1], e.getMessage());
+        }
+
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> TimeCode.parseBC("C6", TimeCode.parse("9950"))
         );
     }
 }

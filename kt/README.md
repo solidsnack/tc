@@ -17,6 +17,9 @@ TimeCode.tc8(t) // "2026VDJB"
 TimeCode.of(t).tcX(2) // "2026VDJBD5.25"
 TimeCode.parse("2026VDJB").toInstant() // 2026-10-17T14:23:20Z
 TimeCode.parse("2026VDJB").descriptor // Descriptor(year=2026, ...)
+TimeCode.bc4(t) // "C6VD"
+TimeCode.of(t).bc() // "C6VDJBD5.25"
+TimeCode.parseBC("C6VDJB").toInstant() // 2026-10-17T14:23:20Z, near now
 ```
 
 ## Java
@@ -31,6 +34,8 @@ TimeCode.tc8(t); // "2026VDJB"
 TimeCode.of(t).tcX(2); // "2026VDJBD5.25"
 TimeCode.parse("2026VDJB").toInstant(); // 2026-10-17T14:23:20Z
 TimeCode.parse("2026VDJB").getDescriptor().halfMonth(); // 19
+TimeCode.bc4(t); // "C6VD"
+TimeCode.parseBC("C6VDJB", TimeCode.parse("2130")); // 2226VDJBB0
 ```
 
 From Java, the factories are static methods, so there is no `Companion` to
@@ -38,6 +43,11 @@ reach through, and optional arguments are overloads. The
 `TimeCode.Descriptor` is a record. TimeCodes are equal when they stand for
 the same time, and they are `Comparable`, in time order. An invalid code,
 descriptor, precision or length throws `IllegalArgumentException`.
+
+A bicentennial code writes the year as its place in a cycle of 200 years, so
+`C6` is 2026, and also 1826 and 2226. `TimeCode.parseBC` reads it in the year
+nearest the present, no more than 100 years before it and less than 100
+after, or near the TimeCode it is given.
 
 `java.time` has no leap seconds, so a leap second, like any code past the
 end of its half month, is read as the last second of the half month:
