@@ -35,7 +35,7 @@
 
     var timestamp = new RegExp(
         '^([0-9]{4})-([0-9]{2})-([0-9]{2})' +
-            'T([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\\.([0-9]{1,9}))?Z$'
+            'T([0-9]{2}):([0-9]{2}):([0-9]{2})(?:[.]([0-9]{1,9}))?Z$'
     )
 
     function padStart(s, length, c) {
@@ -154,7 +154,7 @@
             '.' + padStart(String(fields.nanoseconds), 9, '0')
 
         if (digits === undefined) {
-            return code.replace(/\.?0+$/, '')
+            return code.replace(/[.]?0+$/, '')
         }
 
         if (

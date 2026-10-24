@@ -12,7 +12,7 @@ const groups = ['tc5', 'tc8', 'tcx', 'tcn']
 // fraction of the second cut off after six digits. Neither database takes
 // the year 0000 as text, so the ports are given times this way.
 function epoch(timestamp) {
-    const [, whole, fraction = ''] = /^(.*:\d\d)(?:\.(\d+))?Z$/.exec(
+    const [, whole, fraction = ''] = /^(.*:[0-9]{2})(?:[.]([0-9]+))?Z$/.exec(
         timestamp,
     )
     const milliseconds = Date.parse(`${whole}Z`)
