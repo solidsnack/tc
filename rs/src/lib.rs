@@ -11,9 +11,12 @@
 //! assert_eq!(code.tc8(), "2026VDJB");
 //! assert_eq!(code.tcx(2), "2026VDJBD5.25");
 //! assert_eq!(code.to_string(), "2026VDJBD5.25");
+//! assert_eq!(code.bc4(), "C6VD");
+//! assert_eq!(code.bc(11), "C6VDJBD5.25");
 //!
 //! let t: UtcDateTime = code.into();
 //! assert_eq!(TimeCode::try_from(t)?, code);
+//! assert_eq!(TimeCode::parse_bc_near("C6VDJBD5.25", code)?, code);
 //! # Ok::<(), timecode::Error>(())
 //! ```
 
@@ -27,6 +30,7 @@ const P6: &[u8] = b"BDFGHJKLMPQRSTVWXYZ";
 const P7: &[u8] = b"BCDFGHJKLMNPQRVWXYZ";
 const P8: &[u8] = b"BCDFGHJLMNPQRSVWXYZ";
 const P9: &[u8] = b"BCDEFHIJLMNOPQUVWXYZ";
+const B1: &[u8] = b"ABCDEFGHIJKLMNOPQRST";
 const DECIMAL: &[u8] = b"0123456789";
 
 // The start of the second half month in seconds. 372 hours is 15.5 days.
@@ -70,6 +74,40 @@ impl TimeCode {
         TimeCode::try_from(read(code)?)
     }
 
+    /// Read a bicentennial code of any length, from BC2 to a BC8 with a
+    /// fraction of the second, in the year nearest the present, as
+    /// [`TimeCode::parse_bc_near`] does.
+    pub fn parse_bc(code: &str) -> Result<TimeCode, Error> {
+        TimeCode::parse_bc_near(code, TimeCode::now())
+    }
+
+    /// Read a bicentennial code of any length, from BC2 to a BC8 with a
+    /// fraction of the second. Of the years with its place in the cycle of
+    /// 200 years, it stands for the one nearest the year of `near`: no more
+    /// than 100 years before it, and less than 100 after. As with a
+    /// TimeCode, it stands for the start of the time it covers.
+    ///
+    /// ```
+    /// use timecode::{Error, TimeCode};
+    ///
+    /// let near = TimeCode::parse("2026")?;
+    /// let code = TimeCode::parse_bc_near("C6VD", near)?;
+    ///
+    /// assert_eq!(code.to_string(), "2026VDBBB0");
+    /// assert_eq!(TimeCode::parse_bc_near("T9", near)?.tc(4), "1999");
+    /// assert_eq!(
+    ///     TimeCode::parse_bc_near("U9", near),
+    ///     Err(Error::BicentennialCharacter { character: 'U', place: 1 }),
+    /// );
+    /// # Ok::<(), timecode::Error>(())
+    /// ```
+    pub fn parse_bc_near(
+        code: &str,
+        near: TimeCode,
+    ) -> Result<TimeCode, Error> {
+        TimeCode::try_from(read_bc(code, near.descriptor.year)?)
+    }
+
     /// Display the TimeCode in TC5 format.
     pub fn tc5(&self) -> String {
         self.format()[..5].to_string()
@@ -103,6 +141,24 @@ impl TimeCode {
         };
 
         s[..length].to_string()
+    }
+
+    /// Display the TimeCode in BC4 format: the place of its year in a cycle
+    /// of 200 years, the half month and the first place of the block.
+    pub fn bc4(&self) -> String {
+        self.bc(4)
+    }
+
+    /// Display the TimeCode as a bicentennial code with the requested number
+    /// of digits, from 2 to 18: the TC with two more digits, with its year
+    /// written as its place in a cycle of 200 years. Fewer than 2 digits
+    /// gives a BC2, and more than 18 gives a BC18. As in the specification,
+    /// BC9 is displayed like BC10.
+    pub fn bc(&self, digits: u8) -> String {
+        let years = usize::from(self.descriptor.year % 200);
+        let code = self.tc(digits.clamp(2, 18) + 2);
+
+        format!("{}{}{}", char::from(B1[years / 10]), years % 10, &code[4..])
     }
 
     /// The components of the TimeCode.
@@ -277,6 +333,14 @@ pub enum Error {
     Character { character: char, place: u8 },
     /// A component of a descriptor is out of range.
     OutOfRange { component: &'static str, max: u32 },
+    /// The bicentennial code has fewer than 2 or more than 8 places.
+    BicentennialPlaces,
+    /// The bicentennial code has a fraction of the second, but is shorter
+    /// than a BC8.
+    BicentennialFraction,
+    /// A place of the year of a bicentennial code, B1 or B2 (1 or 2), has a
+    /// character it does not allow.
+    BicentennialCharacter { character: char, place: u8 },
 }
 
 impl fmt::Display for Error {
@@ -308,6 +372,15 @@ impl fmt::Display for Error {
             }
             Error::OutOfRange { component, max } => {
                 write!(f, "The {component} must be from 0 to {max}.")
+            }
+            Error::BicentennialPlaces => {
+                f.write_str("Bicentennial codes have from 2 to 8 places.")
+            }
+            Error::BicentennialFraction => {
+                f.write_str("Only a BC8 may have a fraction of the second.")
+            }
+            Error::BicentennialCharacter { character, place } => {
+                write!(f, "{character} is not allowed in B{place}.")
             }
         }
     }
@@ -408,4 +481,48 @@ fn read(code: &str) -> Result<Descriptor, Error> {
         seconds: seconds as u8,
         nanoseconds,
     })
+}
+
+// Reads the components of a bicentennial code of any length, from BC2 to
+// BC8 with a fraction of the second, in the year with its place in the cycle
+// nearest the year `near`: no more than 100 years before it, and less than
+// 100 after.
+fn read_bc(code: &str, near: u16) -> Result<Descriptor, Error> {
+    let mut parts = code.split('.');
+    let places: Vec<char> = parts.next().unwrap_or("").chars().collect();
+    let fraction = parts.next();
+
+    if places.len() < 2 || places.len() > 8 {
+        return Err(Error::BicentennialPlaces);
+    }
+
+    if fraction.is_some() && places.len() < 8 {
+        return Err(Error::BicentennialFraction);
+    }
+
+    // The digit a place of the year stands for.
+    let digit = |chars: &[u8], i: usize| -> Result<i32, Error> {
+        let c = places[i];
+
+        chars
+            .iter()
+            .position(|&allowed| char::from(allowed) == c)
+            .map(|n| n as i32)
+            .ok_or(Error::BicentennialCharacter {
+                character: c,
+                place: (i + 1) as u8,
+            })
+    };
+
+    let years = (10 * digit(B1, 0)?) + digit(DECIMAL, 1)?;
+    let earliest = i32::from(near) - 100;
+    let year = earliest + (years - earliest).rem_euclid(200);
+
+    if !(0..=9999).contains(&year) {
+        return Err(Error::YearOutOfRange);
+    }
+
+    // The rest is read as the TimeCode with the year written out. The places
+    // of the year are ASCII, so the rest of the code starts at byte 2.
+    read(&format!("{year:04}{}", &code[2..]))
 }

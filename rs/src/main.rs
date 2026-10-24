@@ -6,7 +6,7 @@ const AFTER_HELP: &str = "A TIME is a TimeCode or a timestamp in UTC: \
     yyyy-mm-ddTHH:MM:SS.nnnnnnnnnZ, where the fraction may have from 1 to 9 \
     digits, and the time may stop after the hours, the minutes or the \
     seconds, or be left out, as in 2026-10-17Z. Second 60, for a leap \
-    second, is read as second 59. Without --digits, tc shows the full \
+    second, is read as second 59. Without --digits, tc and bc show the full \
     precision of the time.";
 
 /// Encode and decode TimeCodes: sortable, short timestamps. Without a
@@ -65,6 +65,28 @@ enum Command {
         #[arg(value_parser = time)]
         time: Option<TimeCode>,
     },
+    /// Print a time as a BC4 code: about 20 hours, in a cycle of 200 years.
+    #[command(after_help = AFTER_HELP)]
+    Bc4 {
+        /// The time to encode; by default, now.
+        #[arg(value_parser = time)]
+        time: Option<TimeCode>,
+    },
+    /// Print a time as a bicentennial code of any length.
+    #[command(after_help = AFTER_HELP)]
+    Bc {
+        /// Length of the code.
+        #[arg(
+            short,
+            long,
+            value_name = "LENGTH",
+            value_parser = clap::value_parser!(u8).range(2..=18),
+        )]
+        digits: Option<u8>,
+        /// The time to encode; by default, now.
+        #[arg(value_parser = time)]
+        time: Option<TimeCode>,
+    },
     /// Print the time a TimeCode stands for, in UTC.
     Parse {
         /// Print the code, time and descriptor as JSON.
@@ -90,6 +112,17 @@ fn main() {
             match digits {
                 Some(digits) => code.tc(digits),
                 None => code.to_string(),
+            }
+        }
+        Command::Bc4 { time } => time.unwrap_or_else(TimeCode::now).bc4(),
+        Command::Bc { digits, time } => {
+            let code = time.unwrap_or_else(TimeCode::now);
+
+            match digits {
+                Some(digits) => code.bc(digits),
+                // The place of the year, then the rest of the TimeCode, with
+                // the precision of the time.
+                None => code.bc(2) + &code.to_string()[4..],
             }
         }
         Command::Parse {

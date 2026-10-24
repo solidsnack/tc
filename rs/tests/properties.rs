@@ -1,13 +1,14 @@
 use proptest::prelude::*;
 use proptest::sample::select;
 use time::{Date, Duration, Month, Time, UtcDateTime, UtcOffset};
-use timecode::{Descriptor, TimeCode};
+use timecode::{Descriptor, Error, TimeCode};
 
 const P5: &str = "ABCDEFGHIJKLOPQRSTUVWXYZ";
 const P6: &str = "BDFGHJKLMPQRSTVWXYZ";
 const P7: &str = "BCDFGHJKLMNPQRVWXYZ";
 const P8: &str = "BCDFGHJLMNPQRSVWXYZ";
 const P9: &str = "BCDEFHIJLMNOPQUVWXYZ";
+const B1: &str = "ABCDEFGHIJKLMNOPQRST";
 const DECIMAL: &str = "0123456789";
 
 fn first() -> UtcDateTime {
@@ -214,12 +215,74 @@ proptest! {
         p in 10..=u8::MAX,
         short in 0..4u8,
         long in 21..=u8::MAX,
+        short_bc in 0..2u8,
+        long_bc in 19..=u8::MAX,
     ) {
         let code = TimeCode::try_from(t).unwrap();
 
         prop_assert_eq!(code.tcx(p), code.tcx(9));
         prop_assert_eq!(code.tc(short), code.tc(4));
         prop_assert_eq!(code.tc(long), code.tc(20));
+        prop_assert_eq!(code.bc(short_bc), code.bc(2));
+        prop_assert_eq!(code.bc(long_bc), code.bc(18));
+    }
+
+    #[test]
+    fn a_bicentennial_code_is_the_timecode_with_the_place_of_its_year(
+        t in instant(),
+        n in 2..=18u8,
+    ) {
+        let code = TimeCode::try_from(t).unwrap();
+        let years = usize::from(code.descriptor().year % 200);
+        let place = format!("{}{}", &B1[years / 10..=years / 10], years % 10);
+
+        prop_assert_eq!(code.bc(n), place + &code.tc(n + 2)[4..]);
+        prop_assert_eq!(code.bc4(), code.bc(4));
+    }
+
+    // Near a time no more than 100 years after it, or less than 100 before,
+    // a bicentennial code reads as the TimeCode it comes from does.
+    #[test]
+    fn a_bicentennial_code_reads_near_its_time_as_its_timecode_does(
+        t in instant(),
+        n in 2..=18u8,
+        offset in -99..=100i32,
+    ) {
+        let code = TimeCode::try_from(t).unwrap();
+        let year = i32::from(code.descriptor().year);
+        let near_year = (year + offset).clamp(0, 9999);
+        let near = TimeCode::parse(&format!("{near_year:04}")).unwrap();
+
+        prop_assert_eq!(
+            TimeCode::parse_bc_near(&code.bc(n), near).unwrap(),
+            TimeCode::parse(&code.tc(n + 2)).unwrap(),
+        );
+    }
+
+    #[test]
+    fn a_bicentennial_code_reads_as_the_nearest_year_in_its_cycle(
+        t in instant(),
+        near_year in 0..=9999i32,
+    ) {
+        let code = TimeCode::try_from(t).unwrap();
+        let near = TimeCode::parse(&format!("{near_year:04}")).unwrap();
+
+        match TimeCode::parse_bc_near(&code.bc4(), near) {
+            Ok(read) => {
+                let year = i32::from(read.descriptor().year);
+
+                prop_assert!((-100..100).contains(&(year - near_year)));
+                prop_assert_eq!(
+                    year % 200,
+                    i32::from(code.descriptor().year % 200),
+                );
+            }
+            // The nearest year may be before 0000 or after 9999.
+            Err(e) => {
+                prop_assert_eq!(e, Error::YearOutOfRange);
+                prop_assert!(!(100..9900).contains(&near_year));
+            }
+        }
     }
 
     #[test]

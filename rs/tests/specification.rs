@@ -98,6 +98,43 @@ fn tcn() {
     run("tcn")
 }
 
+// Bicentennial codes are read near a time, which each decode test gives.
+#[test]
+fn bc() {
+    let suite = suite();
+    let mut failures = vec![];
+
+    for case in suite["bc"]["decode"].as_vec().expect("a list of cases") {
+        let input = case["input"].as_str().expect("an input");
+        let near = case["near"].as_str().expect("a time to read near");
+        let output = case["output"].as_str().expect("an output");
+        let near = TimeCode::try_from(instant(near)).expect(near);
+        let t: UtcDateTime =
+            TimeCode::parse_bc_near(input, near).expect(input).into();
+
+        if t != instant(output) {
+            failures.push(format!("decode {input}: {t}, not {output}"));
+        }
+    }
+
+    for (input, output) in cases(&suite, "bc", "encode") {
+        let code = TimeCode::try_from(instant(input)).expect(input);
+        let n = output.len() as u8;
+        let encodings = match n {
+            4 => vec![code.bc(n), code.bc4()],
+            _ => vec![code.bc(n)],
+        };
+
+        for s in encodings {
+            if s != output {
+                failures.push(format!("encode {input}: {s}, not {output}"));
+            }
+        }
+    }
+
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
 // The time crate has no leap seconds: it reads 23:59:60 as 23:59:59 and
 // 999,999,999 nanoseconds. TimeCodes treat a leap second as the last second
 // of its half month, so both ways round, the leap seconds land in the second
