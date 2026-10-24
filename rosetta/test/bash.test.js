@@ -13,15 +13,18 @@ const { suite, groups } = require('./cases.js')
 const script = path.join(__dirname, '..', 'bash', 'timecode.bash')
 const source = fs.readFileSync(script, 'utf8')
 
-// A directory with a date command that prints the fields in NOW, when it is
-// asked for them as the port asks: in UTC, from the year to the nanosecond.
+// A directory with a date command that prints the time in NOW, which has
+// the fields from the year to the nanosecond, in the format it is asked
+// for. It must be asked for the time in UTC.
 const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'timecode-bash-'))
 
 fs.writeFileSync(
     path.join(bin, 'date'),
     `#!/bin/sh
-[ "$*" = '-u +%Y %m %d %H %M %S %N' ] || exit 64
-printf '%s\\n' "$NOW"
+[ "$#" -eq 2 ] && [ "$1" = -u ] || exit 64
+set -- "$2" $NOW
+printf '%s\\n' "\${1#+}" | sed -e "s/%Y/$2/g" -e "s/%m/$3/g" -e "s/%d/$4/g" \\
+    -e "s/%H/$5/g" -e "s/%M/$6/g" -e "s/%S/$7/g" -e "s/%N/$8/g"
 `,
     { mode: 0o755 },
 )
@@ -32,7 +35,7 @@ const timestamp = new RegExp(
         'T([0-9]{2}):([0-9]{2}):([0-9]{2})(?:[.]([0-9]{1,9}))?Z$',
 )
 
-// The fields of a timestamp, as date prints them for the port.
+// The fields of a timestamp, from the year to the nanosecond.
 function fieldsOf(t) {
     const [, ...fields] = timestamp.exec(t)
     const fraction = fields.pop() ?? ''
@@ -40,7 +43,7 @@ function fieldsOf(t) {
     return [...fields, fraction.padEnd(9, '0')].join(' ')
 }
 
-// Runs a command with the clock at a time, given as the fields date prints.
+// Runs a command with the clock at a time, given as its fields.
 function run(now, command, ...args) {
     return spawnSync(command, args, {
         encoding: 'utf8',
@@ -66,13 +69,8 @@ function assertAgrees(code, expected) {
     assert.equal(code.slice(0, n), expected.slice(0, n))
 }
 
-// The length of the code each command prints, and with --extend, to the
-// millisecond.
-const lengths = {
-    tc5: [5, 14],
-    tc8: [8, 14],
-    tcx: [10, 14],
-}
+// The length of the code each command prints.
+const lengths = { tc5: 5, tc8: 8, tcx: 10 }
 
 // The date of a system that keeps leap seconds prints 23:59:60 for one,
 // which the port counts as the next second, as the specification does.
@@ -81,16 +79,17 @@ for (const group of [...groups, 'leap-seconds']) {
         for (const { input, output } of suite[group].encode) {
             test(`encode ${input}`, () => {
                 const now = fieldsOf(input)
+                const extended = print(now, 'tcx', '--extend')
 
-                for (const [command, [n, m]] of Object.entries(lengths)) {
+                for (const [command, n] of Object.entries(lengths)) {
                     const code = print(now, command)
-                    const extended = print(now, command, '--extend')
 
                     assert.equal(code.length, n)
-                    assert.equal(extended.length, m)
                     assertAgrees(code, output)
-                    assertAgrees(extended, output)
                 }
+
+                assert.equal(extended.length, 14)
+                assertAgrees(extended, output)
             })
         }
     })
@@ -99,14 +98,10 @@ for (const group of [...groups, 'leap-seconds']) {
 describe('tests.yaml: bc', () => {
     for (const { input, output } of suite.bc.encode) {
         test(`encode ${input}`, () => {
-            const now = fieldsOf(input)
-            const code = print(now, 'bc4')
-            const extended = print(now, 'bc4', '--extend')
+            const code = print(fieldsOf(input), 'bc4')
 
             assert.equal(code.length, 4)
-            assert.equal(extended.length, 12)
             assertAgrees(code, output)
-            assertAgrees(extended, output)
         })
     }
 })
@@ -115,28 +110,36 @@ const t = fieldsOf('2026-10-17T14:23:45.25Z')
 
 test('without a command, the script prints a TC8', () => {
     assert.equal(print(t), '2026VDJB')
-    assert.equal(print(t, '--extend'), '2026VDJBD5.250')
 })
 
-test('the commands take no arguments but --extend', () => {
-    for (const args of [['--extended'], ['--extend', '--extend'], ['8']]) {
-        const { status, stdout, stderr } = run(t, script, 'tc8', ...args)
+test('only tcx takes an argument, --extend', () => {
+    const refusals = [
+        [['tc5', '--extend'], 'Usage: tc5'],
+        [['tc8', '8'], 'Usage: tc8'],
+        [['bc4', '--extend'], 'Usage: bc4'],
+        [['tcx', '--extended'], 'Usage: tcx [--extend]'],
+        [['tcx', '--extend', '--extend'], 'Usage: tcx [--extend]'],
+        [['--extend'], 'Usage: tc8'],
+    ]
 
-        assert.equal(status, 2)
+    for (const [args, usage] of refusals) {
+        const { status, stdout, stderr } = run(t, script, ...args)
+
+        assert.equal(status, 2, args.join(' '))
         assert.equal(stdout, '')
-        assert.equal(stderr, 'Usage: tc8 [--extend]\n')
+        assert.equal(stderr, `${usage}\n`)
     }
 })
 
 test('--extend needs a date that gives the fraction of the second', () => {
     // A date that does not know %N prints N, or %N.
     for (const now of ['2026 10 17 14 23 45 N', '2026 10 17 14 23 45 %N']) {
-        const { status, stdout, stderr } = run(now, script, 'bc4', '--extend')
+        const { status, stdout, stderr } = run(now, script, 'tcx', '--extend')
 
-        assert.equal(print(now, 'bc4'), 'C6VD')
+        assert.equal(print(now, 'tcx'), '2026VDJBD5')
         assert.equal(status, 1)
         assert.equal(stdout, '')
-        assert.equal(stderr, 'bc4: date gives no fraction of the second.\n')
+        assert.equal(stderr, 'tcx: date gives no fraction of the second.\n')
     }
 })
 
@@ -155,30 +158,30 @@ function definitionOf(name) {
 // script sets the options this one does, and leaves no variables behind:
 // declare would print them.
 test('each function stands alone', () => {
-    const expected = {
-        tc5: ['2026V', '2026VDJBD5.250'],
-        tc8: ['2026VDJB', '2026VDJBD5.250'],
-        tcx: ['2026VDJBD5', '2026VDJBD5.250'],
-        bc4: ['C6VD', 'C6VDJBD5.250'],
-    }
+    const calls = [
+        ['tc5', '2026V'],
+        ['tc8', '2026VDJB'],
+        ['tcx', '2026VDJBD5'],
+        ['tcx --extend', '2026VDJBD5.250'],
+        ['bc4', 'C6VD'],
+    ]
 
-    for (const [name, [code, extended]] of Object.entries(expected)) {
-        const { definition, words } = definitionOf(name)
+    for (const [call, code] of calls) {
+        const { definition, words } = definitionOf(call.split(' ')[0])
 
-        assert.ok(words.includes('code'), name)
+        assert.ok(words.includes('half_month'), call)
 
         for (const options of ['', 'set -o errexit -o nounset -o pipefail']) {
             const shell = `${options}
 ${definition}
-${name}
-${name} --extend
+${call}
 declare -p ${words.join(' ')} 2>/dev/null || true
 `
             const { status, stdout, stderr } = run(t, 'bash', '-c', shell)
 
-            assert.equal(stderr, '', name)
-            assert.equal(stdout, `${code}\n${extended}\n`, name)
-            assert.equal(status, 0, name)
+            assert.equal(stderr, '', call)
+            assert.equal(stdout, `${code}\n`, call)
+            assert.equal(status, 0, call)
         }
     }
 })

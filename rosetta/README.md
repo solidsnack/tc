@@ -76,15 +76,15 @@ well.
 bash/timecode.bash               # the current time, as a TC8: 2026VDJB
 bash/timecode.bash tcx           # 2026VDJBD5
 bash/timecode.bash bc4           # C6VD
-bash/timecode.bash tc5 --extend  # to the millisecond: 2026VDJBD5.250
+bash/timecode.bash tcx --extend  # to the millisecond: 2026VDJBD5.250
 ```
 
-As `bash/README.md` says, `tc5`, `tc8`, `tcx` and `bc4` take no arguments
-but `--extend`, which makes each of them print the current time to the
-millisecond, as a TC14 or a BC12. Each function stands alone, so it can be
-copied into another script as it is. It reads the time with one call to
-`date`, which must know `%N` for `--extend`, as GNU date and the date of
-macOS 26 do. The script needs Bash 3.2 or later.
+As `bash/README.md` says, `tc5`, `tc8` and `bc4` take no arguments, and
+`tcx` takes only `--extend`, which makes it print the current time to the
+millisecond, as a TC14. Each function stands alone, so it can be copied into
+another script as it is. It reads the time with one call to `date`, which
+must know `%N` for `--extend`, as GNU date and the date of macOS 26 do. The
+script needs Bash 3.2 or later.
 
 ## Precision
 
