@@ -66,6 +66,8 @@
                         just
                         nodejs
                         postgresql
+                        rubocop
+                        ruby
                     ];
                 };
                 default = pkgs.mkShell {

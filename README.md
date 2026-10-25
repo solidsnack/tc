@@ -6,7 +6,8 @@ TimeCodes are sortable, short timestamps.
 - `kt/` has the Kotlin library, for Kotlin and Java, built with Gradle.
 - `ts/` has the TypeScript library and command line tool, built with npm.
 - `rs/` has the Rust library and command line tool, built with Cargo.
-- `rosetta/` has small ports: ECMAScript 5, PostgreSQL, DuckDB, Bash and Go.
+- `rosetta/` has small ports: ECMAScript 5, PostgreSQL, DuckDB, Bash, Go and
+  Ruby.
 
 Implementations of the TimeCode specification are versioned separately from it
 but contain a constant indicating which version of the TimeCode spec they

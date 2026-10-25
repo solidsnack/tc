@@ -1,0 +1,10 @@
+# frozen_string_literal: true
+
+source 'https://rubygems.org'
+
+gemspec
+
+# For the tests, which come with Ruby. RuboCop is left out, as the dev shell
+# has its own.
+gem 'minitest', '~> 5.25'
+gem 'rake', '~> 13.2'

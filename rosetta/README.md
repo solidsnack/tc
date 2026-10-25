@@ -29,12 +29,14 @@ TimeCodes:
 
 - `go/`, a Go module: `Encode`, `TC5`, `TC8`, `TCX` and `Parse`, and `BC`,
   `BC4` and `ParseBC`.
+- `ruby/`, a gem: `encode`, `tc5`, `tc8`, `tcx` and `parse`, and `bc`,
+  `bc4` and `parse_bc`.
 
 Each port also gives the revision of the specification it follows:
 `timecode.SPEC_VERSION` in ECMAScript 5, `timecode_spec_version()` in SQL,
-`SPEC_VERSION` in Bash and `timecode.SpecVersion` in Go. The Bash and Go
-ports follow 1.1.0, for their bicentennial codes; the others follow 1.0.0,
-without them.
+`SPEC_VERSION` in Bash, `timecode.SpecVersion` in Go and
+`TimeCode::SPEC_VERSION` in Ruby. The Bash port and the packages follow
+1.1.0, for their bicentennial codes; the others follow 1.0.0, without them.
 
 ## ECMAScript 5
 
@@ -121,6 +123,20 @@ it. It takes and gives a `time.Time`, which keeps nanoseconds and the year
 0000, so every TimeCode can be encoded and parsed, but it has no leap
 seconds. A length of 0 asks for a code with the precision of the time.
 
+## Ruby
+
+```ruby
+TimeCode.encode(Time.now, 8)  # the current TC8
+TimeCode.parse('2026VDJB')    # 2026-10-17 14:23:20 UTC
+TimeCode.bc(Time.now, 5)      # the current BC5
+TimeCode.parse_bc('C6VDJ')    # read near the present, or a Time given
+```
+
+`ruby/` is a gem, `timecode`, with one module, `TimeCode`, which needs only
+Ruby 3.2 or later; `ruby/README.md` describes it. Like a `time.Time` in Go,
+a `Time` keeps nanoseconds and the year 0000, but has no leap seconds.
+Without a length, a code has the precision of the time.
+
 ## Precision
 
 The databases keep microseconds, so a code made there has at most six digits
@@ -150,9 +166,10 @@ throwaway PostgreSQL server, on a socket in `tmp/pg`, and stops it after.
 The packages are tested with their languages' own tools, and read the cases
 through a link to `../specification/tests.yaml`. From anywhere in the
 repository, `just test-go` checks the formatting of the Go package with
-`gofmt`, vets it and runs `go test`.
+`gofmt`, vets it and runs `go test`, and `just test-ruby` checks the gem
+with RuboCop, runs its tests with Rake and Minitest, and builds it.
 
 With Nix, `nix develop .#rosetta` gives a shell with Node, PostgreSQL,
-DuckDB, Go and `just`. Its `bash` and `date` are Bash 5 and GNU date, from
-Nix, so the tests use them where they call `bash` or the real clock, though
-the script itself still runs with `/bin/bash`.
+DuckDB, Go, Ruby, RuboCop and `just`. Its `bash` and `date` are Bash 5 and
+GNU date, from Nix, so the tests use them where they call `bash` or the real
+clock, though the script itself still runs with `/bin/bash`.

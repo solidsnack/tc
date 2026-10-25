@@ -1,0 +1,25 @@
+# The repository's guidance: indents of 4 spaces, and lines of 79 columns.
+# The version of Ruby comes from the gemspec.
+AllCops:
+    NewCops: enable
+    SuggestExtensions: false
+
+Layout/IndentationWidth:
+    Width: 4
+
+Layout/LineLength:
+    Max: 79
+
+# Each calculation is one method, as in the specification, which makes for
+# longer methods, and a longer module, than RuboCop allows by default.
+Metrics/AbcSize:
+    Max: 35
+
+Metrics/ClassLength:
+    Max: 150
+
+Metrics/MethodLength:
+    Max: 20
+
+Metrics/ModuleLength:
+    Max: 200
