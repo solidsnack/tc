@@ -1,0 +1,50 @@
+[build-system]
+requires = ['hatchling>=1.27']
+build-backend = 'hatchling.build'
+
+[project]
+name = 'timecode'
+version = '0.1.0'
+description = 'TimeCodes: sortable, short timestamps'
+readme = 'README.md'
+license = 'Unlicense'
+authors = [{ name = 'Jason Dusek' }]
+requires-python = '>=3.11'
+
+[project.urls]
+Homepage = 'https://github.com/solidsnack/tc'
+
+# In the repository, tests/tests.yaml is a link to the specification's
+# cases, which the sdist holds a copy of instead.
+[tool.hatch.build.targets.sdist]
+exclude = ['tests/tests.yaml']
+
+[tool.hatch.build.targets.sdist.force-include]
+'../../specification/tests.yaml' = 'tests/tests.yaml'
+
+[dependency-groups]
+test = ['pytest>=8', 'pyyaml>=6']
+lint = ['mypy>=1.10', 'ruff>=0.6']
+
+[tool.pytest.ini_options]
+pythonpath = ['src']
+testpaths = ['tests']
+
+[tool.mypy]
+files = ['src']
+strict = true
+
+# The repository's guidance: indents of 4 spaces, lines of 79 columns, and
+# single quotes, but for docstrings, which keep double quotes, as PEP 257
+# has them.
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.format]
+quote-style = 'single'
+
+[tool.ruff.lint]
+select = ['B', 'C4', 'E', 'F', 'I', 'N', 'PT', 'RUF', 'SIM', 'UP', 'W']
+
+[tool.ruff.lint.isort]
+known-first-party = ['timecode']

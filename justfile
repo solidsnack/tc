@@ -88,9 +88,24 @@ test-ruby:
     trap 'rm -rf "$out"' EXIT
     gem build --strict --silent timecode.gemspec --output "$out/timecode.gem"
 
+# Checks the Python port with Ruff and mypy, runs its tests and builds it.
+[group('test')]
+[working-directory('rosetta/python')]
+test-python:
+    #!/usr/bin/env bash
+    set -o errexit -o nounset -o pipefail
+    ruff format --check
+    ruff check
+    mypy
+    pytest
+    # The package is built only to check it, so it is thrown away.
+    out="$(mktemp -d)"
+    trap 'rm -rf "$out"' EXIT
+    python -m build --no-isolation --quiet --outdir "$out"
+
 # Runs all the tests.
 [group('test')]
-test: test-rs test-ts test-kt test-rosetta test-go test-ruby
+test: test-rs test-ts test-kt test-rosetta test-go test-ruby test-python
 
 # Starts a throwaway PostgreSQL server, on a socket in rosetta/tmp/pg.
 [group('test')]
@@ -159,6 +174,7 @@ nix-shells:
     nix develop .#rosetta --command just test-rosetta
     nix develop .#rosetta --command just test-go
     nix develop .#rosetta --command just test-ruby
+    nix develop .#rosetta --command just test-python
 
 # Builds the command line tools as a flake that uses this one would.
 [group('nix')]
