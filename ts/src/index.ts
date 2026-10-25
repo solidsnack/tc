@@ -1,1 +1,1 @@
-export { TimeCode } from './timecode.js'
+export { SPEC_VERSION, TimeCode } from './timecode.js'

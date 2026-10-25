@@ -1,22 +1,30 @@
 # Rosetta
 
-Small ports of the TimeCode specification, `../specification/index.md`. Each
-has a way to encode a time, at any length or as a TC5, TC8 or TCX, and a way
-to parse a code. Each is checked against `../specification/tests.yaml`.
+Small ports of the TimeCode specification, `../specification/index.md`. Most
+have a way to encode a time, at any length or as a TC5, TC8 or TCX, and a way
+to parse a code; the Bash port prints a time, by default the current time, as
+a TC5, TC8, TCX, BC4, BC5 or BC8. Each is checked against
+`../specification/tests.yaml`.
 
-| Port          | Encode                          | Parse            |
-| ------------- | ------------------------------- | ---------------- |
-| `es5/`        | `encode`, `tc5`, `tc8`, `tcx`   | `decode`         |
-| `sql-pg/`     | `timecode`, `tc5`, `tc8`, `tcx` | `timecode_parse` |
-| `sql-duckdb/` | `timecode`, `tc5`, `tc8`, `tcx` | `timecode_parse` |
+| Port          | Encode                                   | Parse            |
+| ------------- | ---------------------------------------- | ---------------- |
+| `es5/`        | `encode`, `tc5`, `tc8`, `tcx`            | `decode`         |
+| `sql-pg/`     | `timecode`, `tc5`, `tc8`, `tcx`          | `timecode_parse` |
+| `sql-duckdb/` | `timecode`, `tc5`, `tc8`, `tcx`          | `timecode_parse` |
+| `bash/`       | `tc5`, `tc8`, `tcx`, `bc4`, `bc5`, `bc8` |                  |
 
-The encoders take a time, `t`. `encode(t, n)` and `timecode(t, n)` give a
-code of `n` digits, from 4 to 20, or with the precision of the time if `n` is
-left out. `tc5(t)` and `tc8(t)` give a TC5 and a TC8. `tcx(t, p)` gives a TCX
-with `p` digits of the fraction of the second, from 0 to 9, or none if `p` is
-left out. The parsers take a code of any length. Codes past the end of their
-half month, like those of leap seconds, are read as the last second of the
-half month.
+Apart from Bash's, the encoders take a time, `t`. `encode(t, n)` and
+`timecode(t, n)` give a code of `n` digits, from 4 to 20, or with the
+precision of the time if `n` is left out. `tc5(t)` and `tc8(t)` give a TC5
+and a TC8. `tcx(t, p)` gives a TCX with `p` digits of the fraction of the
+second, from 0 to 9, or none if `p` is left out. The parsers take a code of
+any length. Codes past the end of their half month, like those of leap
+seconds, are read as the last second of the half month.
+
+Each port also gives the revision of the specification it follows:
+`timecode.SPEC_VERSION` in ECMAScript 5, `timecode_spec_version()` in SQL
+and `SPEC_VERSION` in Bash. The Bash port follows 1.1.0, for its bicentennial
+codes; the others follow 1.0.0, without them.
 
 ## ECMAScript 5
 
@@ -63,6 +71,31 @@ is read in the session's time zone. The digits of the fraction of a TCX are
 `fraction_digits` here too. A helper macro, `timecode_digit`, is made as
 well.
 
+## Bash
+
+```sh
+bash/timecode.bash                           # the current time, as a TC8
+bash/timecode.bash tcx 2026-10-17T14:23:45Z  # 2026VDJBD5
+bash/timecode.bash bc5 2026-10-17T14:23:45Z  # C6VDJ
+bash/timecode.bash bc8                       # the current time, as C6VDJBD5
+bash/timecode.bash tcx --extend              # the current time, to the ms
+```
+
+As `bash/README.md` says, each function takes a timestamp in UTC,
+`yyyy-mm-ddTHH:MM:SSZ`, or prints the current time without one. `tcx` also
+takes `--extend`, before any timestamp, to print the time to the
+millisecond, as a TC14, such as `2026VDJBD5.250`; a timestamp has whole
+seconds, so its milliseconds are `000`. Each field of a timestamp must be in
+range, though the day is not checked against the length of its month, and
+second 60, for a leap second, counts as the next second, as in the
+specification.
+
+Each function stands alone, so it can be copied into another script as it
+is. It reads the current time with one call to `date`, which must know `%N`
+for `--extend`, as GNU date and the date of macOS 26 do. The script needs
+Bash 3.2 or later, at `/bin/bash`; where there is none, as on NixOS, it can
+be run as `bash bash/timecode.bash`.
+
 ## Precision
 
 The databases keep microseconds, so a code made there has at most six digits
@@ -82,4 +115,13 @@ npm test
 The PostgreSQL tests connect with `psql` and the usual `PG*` environment
 variables, and make the functions in a transaction that is rolled back. The
 DuckDB tests use the `duckdb` command, in memory. Either is skipped when its
-database cannot be reached.
+database cannot be reached. The Bash tests give the script the timestamp
+of each case, and run it with a `date` command of their own, which gives
+the fraction of the second too.
+
+From anywhere in the repository, `just test-rosetta` runs the tests with a
+throwaway PostgreSQL server, on a socket in `tmp/pg`, and stops it after.
+With Nix, `nix develop .#rosetta` gives a shell with Node, PostgreSQL, DuckDB
+and `just`. Its `bash` and `date` are Bash 5 and GNU date, from Nix, so the
+tests use them where they call `bash` or the real clock, though the script
+itself still runs with `/bin/bash`.

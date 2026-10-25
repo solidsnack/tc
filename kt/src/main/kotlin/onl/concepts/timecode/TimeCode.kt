@@ -158,6 +158,12 @@ class TimeCode private constructor(
     )
 
     companion object {
+        /**
+         * The revision of `specification/index.md` that this library
+         * follows.
+         */
+        const val SPEC_VERSION: String = "1.1.0"
+
         private const val p5: String = "ABCDEFGHIJKLOPQRSTUVWXYZ"
         private const val p6: String = "BDFGHJKLMPQRSTVWXYZ"
         private const val p7: String = "BCDFGHJKLMNPQRVWXYZ"

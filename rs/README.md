@@ -5,6 +5,9 @@ TimeCodes are sortable, short timestamps, as specified in
 type, and a command line tool, `timecode`, behind the `cli` feature. It uses
 the `time` crate, and needs no time zone data.
 
+The crate is versioned apart from the specification. `SPEC_VERSION` is the
+revision of the specification it follows: `"1.1.0"`.
+
 ## Library
 
 ```rust
@@ -65,12 +68,20 @@ The command line tool needs the `cli` feature, which brings in `clap`.
 cargo install --locked --features=cli --path .
 ```
 
+With Nix, the flake at the root of the repository builds it:
+
+```sh
+nix profile add github:solidsnack/tc
+```
+
 ```sh
 timecode                           # the current time, as 2026VDJB
 timecode tc8 2026-10-17T14:23:45Z  # 2026VDJB
 timecode tcx -p 2                  # the current time, as 2026VDJBD5.25
 timecode tc 2026-10-17T14:23:45Z   # 2026VDJBD5
 timecode bc4 2026-10-17T14:23:45Z  # C6VD
+timecode bc5 2026-10-17T14:23:45Z  # C6VDJ
+timecode bc8                       # the current time, as C6VDJBD5
 timecode bc -d 6                   # the current time, as C6VDJB
 timecode parse 2026VDJB            # 2026-10-17T14:23:20Z
 timecode parse --json 2026VDJB
@@ -93,3 +104,6 @@ cargo test --all-features  # specification/tests.yaml, properties, docs
 cargo run --features=cli   # the command line tool
 cargo fmt && cargo clippy --all-targets --all-features
 ```
+
+With Nix, `nix develop .#rs` gives a shell with Cargo, Clippy, rustfmt,
+rust-analyzer and `just`.

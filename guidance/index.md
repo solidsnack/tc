@@ -18,9 +18,53 @@ should be structured to avoid terminal semicolons.
 When a formatter or linter is configured, they should be run and the issues
 addressed before committing anything.
 
-### TS
+Imports should be put in three groups: standard library imports, third
+party library imports and internal imports. There should be a blank line
+between groups. Each group should be alphabetized. (Some languages, like Python
+and Rust, have formatters that can do this for you.)
 
-1. TypeScript should be formatted without terminal semicolons.
+In languages where `CamelCase` is used, prefer all-caps acronyms, like `UUID`,
+to title-case acronyms like `Uuid`. Treat `ID` as an acronym.
+
+### Bash
+
+1. Prefer the forms given below for `if` and other structures.
+2. Use double quoted variable references aggressively. Only use unquoted
+   references where the effects of such references -- word splitting, &c -- are
+   being made use of.
+3. Refer to `./template.bash` and apply it as a general rule.
+   1. When the intrinsic logic of the script is more than 25 lines, implement
+      the script by adding functions to the template and calling them from
+      `main`.
+   2. When the template can't be used directly, try to follow the patterns it
+      suggests. For example, when writing scripts in a `justfile`, insert
+      `set -o errexit -o nounset -o pipefail` before any other logic.
+4. Use dashes (`-`) in function names instead of underscores, because functions
+   can be directly called as subcommands.
+5. Prefer lowercase variable names with underscores.
+6. Bash code should be written, by default, against Bash 3.2, to ensure
+   compatibility with systems that are stuck on older versions of Bash.
+
+#### Preferred Forms
+
+##### Control Structures
+
+Use the form with `if` and `then` on separate lines.
+
+```bash
+if something
+then
+    step1
+    step2
+fi
+```
+
+Similarly, separate `while` and `do` and `for` and `do` and all other similar
+cases.
+
+### Regular Expressions
+
+1. Prefer bracketed character classes (`[.]`) to escapes (`\.`).
 
 ### SQL
 
@@ -37,9 +81,9 @@ addressed before committing anything.
    be descriptive names, not single letters.
 6. Aliases for columns or tables should always be written with `AS`.
 
-### Regular Expressions
+### TS
 
-1. Prefer bracketed character classes (`[.]`) to escapes (`\.`).
+1. TypeScript should be formatted without terminal semicolons.
 
 ## Commit Messages
 

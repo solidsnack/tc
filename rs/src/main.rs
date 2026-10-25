@@ -13,7 +13,7 @@ const AFTER_HELP: &str = "A TIME is a TimeCode or a timestamp in UTC: \
 /// command, print the current time as a TC8.
 #[derive(Parser)]
 #[command(name = "timecode", version, after_help = AFTER_HELP)]
-struct Cli {
+struct CLI {
     #[command(subcommand)]
     command: Option<Command>,
 }
@@ -22,21 +22,21 @@ struct Cli {
 enum Command {
     /// Print a time as a TC5 code: the half month.
     #[command(after_help = AFTER_HELP)]
-    Tc5 {
+    TC5 {
         /// The time to encode; by default, now.
         #[arg(value_parser = time)]
         time: Option<TimeCode>,
     },
     /// Print a time as a TC8 code: the block of 200 seconds.
     #[command(after_help = AFTER_HELP)]
-    Tc8 {
+    TC8 {
         /// The time to encode; by default, now.
         #[arg(value_parser = time)]
         time: Option<TimeCode>,
     },
     /// Print a time as a TCX code: the second.
     #[command(after_help = AFTER_HELP)]
-    Tcx {
+    TCX {
         /// Digits of the fraction of the second.
         #[arg(
             short,
@@ -52,7 +52,7 @@ enum Command {
     },
     /// Print a time as a TimeCode of any length.
     #[command(after_help = AFTER_HELP)]
-    Tc {
+    TC {
         /// Length of the code.
         #[arg(
             short,
@@ -67,14 +67,28 @@ enum Command {
     },
     /// Print a time as a BC4 code: about 20 hours, in a cycle of 200 years.
     #[command(after_help = AFTER_HELP)]
-    Bc4 {
+    BC4 {
+        /// The time to encode; by default, now.
+        #[arg(value_parser = time)]
+        time: Option<TimeCode>,
+    },
+    /// Print a time as a BC5 code: about an hour, in a cycle of 200 years.
+    #[command(after_help = AFTER_HELP)]
+    BC5 {
+        /// The time to encode; by default, now.
+        #[arg(value_parser = time)]
+        time: Option<TimeCode>,
+    },
+    /// Print a time as a BC8 code: the second, in a cycle of 200 years.
+    #[command(after_help = AFTER_HELP)]
+    BC8 {
         /// The time to encode; by default, now.
         #[arg(value_parser = time)]
         time: Option<TimeCode>,
     },
     /// Print a time as a bicentennial code of any length.
     #[command(after_help = AFTER_HELP)]
-    Bc {
+    BC {
         /// Length of the code.
         #[arg(
             short,
@@ -99,14 +113,14 @@ enum Command {
 }
 
 fn main() {
-    let command = Cli::parse().command.unwrap_or(Command::Tc8 { time: None });
+    let command = CLI::parse().command.unwrap_or(Command::TC8 { time: None });
     let line = match command {
-        Command::Tc5 { time } => time.unwrap_or_else(TimeCode::now).tc5(),
-        Command::Tc8 { time } => time.unwrap_or_else(TimeCode::now).tc8(),
-        Command::Tcx { precision, time } => {
+        Command::TC5 { time } => time.unwrap_or_else(TimeCode::now).tc5(),
+        Command::TC8 { time } => time.unwrap_or_else(TimeCode::now).tc8(),
+        Command::TCX { precision, time } => {
             time.unwrap_or_else(TimeCode::now).tcx(precision)
         }
-        Command::Tc { digits, time } => {
+        Command::TC { digits, time } => {
             let code = time.unwrap_or_else(TimeCode::now);
 
             match digits {
@@ -114,8 +128,10 @@ fn main() {
                 None => code.to_string(),
             }
         }
-        Command::Bc4 { time } => time.unwrap_or_else(TimeCode::now).bc4(),
-        Command::Bc { digits, time } => {
+        Command::BC4 { time } => time.unwrap_or_else(TimeCode::now).bc4(),
+        Command::BC5 { time } => time.unwrap_or_else(TimeCode::now).bc(5),
+        Command::BC8 { time } => time.unwrap_or_else(TimeCode::now).bc(8),
+        Command::BC { digits, time } => {
             let code = time.unwrap_or_else(TimeCode::now);
 
             match digits {

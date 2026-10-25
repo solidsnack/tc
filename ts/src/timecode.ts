@@ -1,5 +1,8 @@
 import { temporal } from './temporal.js'
 
+/** The revision of `specification/index.md` that this library follows. */
+export const SPEC_VERSION: string = '1.1.0'
+
 const p5: string = 'ABCDEFGHIJKLOPQRSTUVWXYZ'
 const p6: string = 'BDFGHJKLMPQRSTVWXYZ'
 const p7: string = 'BCDFGHJKLMNPQRVWXYZ'

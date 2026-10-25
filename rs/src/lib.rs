@@ -25,6 +25,9 @@ use std::str::FromStr;
 
 use time::{Date, Duration, Month, OffsetDateTime, Time, UtcDateTime};
 
+/// The revision of `specification/index.md` that this crate follows.
+pub const SPEC_VERSION: &str = "1.1.0";
+
 const P5: &[u8] = b"ABCDEFGHIJKLOPQRSTUVWXYZ";
 const P6: &[u8] = b"BDFGHJKLMPQRSTVWXYZ";
 const P7: &[u8] = b"BCDFGHJKLMNPQRVWXYZ";

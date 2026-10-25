@@ -5,6 +5,10 @@ TimeCodes are sortable, short timestamps, as specified in
 `onl.concepts.timecode`. It has one class, `TimeCode`, which is meant to be
 as easy to use from Java as from Kotlin.
 
+The library is versioned apart from the specification.
+`TimeCode.SPEC_VERSION` is the revision of the specification it follows:
+`"1.1.0"`.
+
 ## Kotlin
 
 ```kotlin
@@ -59,3 +63,6 @@ end of its half month, is read as the last second of the half month:
 ./gradlew test   # specification/tests.yaml, jqwik properties and a Java test
 ./gradlew build  # the jar and a sources jar, in build/libs
 ```
+
+With Nix, `nix develop .#kt` gives a shell with JDK 17, which the build
+needs, and `just`. The Gradle wrapper brings Gradle and Kotlin.
