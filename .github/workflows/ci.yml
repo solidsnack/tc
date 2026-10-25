@@ -1,0 +1,66 @@
+# Checks that the Rust, TypeScript and Kotlin projects build cleanly: their
+# formatters and linters find nothing, their compilers give no warnings, and
+# their tests pass.
+name: CI
+
+on: [push, pull_request]
+
+permissions:
+    contents: read
+
+jobs:
+    rust:
+        name: Rust
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: rs
+        env:
+            RUSTFLAGS: -D warnings
+        steps:
+            - uses: actions/checkout@v7
+            - name: Install Rust
+              run: >-
+                  rustup toolchain install stable --profile minimal
+                  --component clippy,rustfmt
+            - run: cargo fmt --check
+            - run: cargo clippy --locked --all-targets --all-features
+            - run: cargo test --locked --all-features
+            # The command line tool, as cargo install builds it.
+            - run: cargo build --locked --release --features cli
+
+    typescript:
+        name: TypeScript
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ts
+        steps:
+            - uses: actions/checkout@v7
+            # The Node of the flake's dev shell.
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: '24'
+                  cache: npm
+                  cache-dependency-path: ts/package-lock.json
+            - run: npm ci
+            - run: npm run fmt:check
+            - run: npm run build
+            - run: npm test
+
+    kotlin:
+        name: Kotlin
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: kt
+        steps:
+            - uses: actions/checkout@v7
+            # The JDK of jvmToolchain(17), in build.gradle.kts.
+            - uses: actions/setup-java@v6
+              with:
+                  distribution: temurin
+                  java-version: '17'
+                  cache: gradle
+            # The jars and the tests, failing on any Gradle deprecation.
+            - run: ./gradlew build --warning-mode=fail
