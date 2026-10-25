@@ -6,6 +6,8 @@ to parse a code; the Bash port prints a time, by default the current time, as
 a TC5, TC8, TCX, BC4, BC5 or BC8. Each is checked against
 `../specification/tests.yaml`.
 
+Most of the ports are files, which are tested together, with Node:
+
 | Port          | Encode                                   | Parse            |
 | ------------- | ---------------------------------------- | ---------------- |
 | `es5/`        | `encode`, `tc5`, `tc8`, `tcx`            | `decode`         |
@@ -21,10 +23,18 @@ second, from 0 to 9, or none if `p` is left out. The parsers take a code of
 any length. Codes past the end of their half month, like those of leap
 seconds, are read as the last second of the half month.
 
+The others are packages, in the usual form for their languages, with tests
+of their own. They encode and parse bicentennial codes as well as
+TimeCodes:
+
+- `go/`, a Go module: `Encode`, `TC5`, `TC8`, `TCX` and `Parse`, and `BC`,
+  `BC4` and `ParseBC`.
+
 Each port also gives the revision of the specification it follows:
-`timecode.SPEC_VERSION` in ECMAScript 5, `timecode_spec_version()` in SQL
-and `SPEC_VERSION` in Bash. The Bash port follows 1.1.0, for its bicentennial
-codes; the others follow 1.0.0, without them.
+`timecode.SPEC_VERSION` in ECMAScript 5, `timecode_spec_version()` in SQL,
+`SPEC_VERSION` in Bash and `timecode.SpecVersion` in Go. The Bash and Go
+ports follow 1.1.0, for their bicentennial codes; the others follow 1.0.0,
+without them.
 
 ## ECMAScript 5
 
@@ -96,6 +106,21 @@ for `--extend`, as GNU date and the date of macOS 26 do. The script needs
 Bash 3.2 or later, at `/bin/bash`; where there is none, as on NixOS, it can
 be run as `bash bash/timecode.bash`.
 
+## Go
+
+```go
+tc8, err := timecode.Encode(time.Now(), 8) // the current TC8
+t, err := timecode.Parse("2026VDJB")       // 2026-10-17T14:23:20Z
+bc5 := timecode.BC(time.Now(), 5)          // the current BC5
+u, err := timecode.ParseBC("C6VDJ", near)  // read near a time.Time
+```
+
+`go/` is a module, `github.com/solidsnack/tc/rosetta/go`, with one package,
+`timecode`, which needs only the standard library; `go/README.md` describes
+it. It takes and gives a `time.Time`, which keeps nanoseconds and the year
+0000, so every TimeCode can be encoded and parsed, but it has no leap
+seconds. A length of 0 asks for a code with the precision of the time.
+
 ## Precision
 
 The databases keep microseconds, so a code made there has at most six digits
@@ -121,7 +146,13 @@ the fraction of the second too.
 
 From anywhere in the repository, `just test-rosetta` runs the tests with a
 throwaway PostgreSQL server, on a socket in `tmp/pg`, and stops it after.
-With Nix, `nix develop .#rosetta` gives a shell with Node, PostgreSQL, DuckDB
-and `just`. Its `bash` and `date` are Bash 5 and GNU date, from Nix, so the
-tests use them where they call `bash` or the real clock, though the script
-itself still runs with `/bin/bash`.
+
+The packages are tested with their languages' own tools, and read the cases
+through a link to `../specification/tests.yaml`. From anywhere in the
+repository, `just test-go` checks the formatting of the Go package with
+`gofmt`, vets it and runs `go test`.
+
+With Nix, `nix develop .#rosetta` gives a shell with Node, PostgreSQL,
+DuckDB, Go and `just`. Its `bash` and `date` are Bash 5 and GNU date, from
+Nix, so the tests use them where they call `bash` or the real clock, though
+the script itself still runs with `/bin/bash`.

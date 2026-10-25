@@ -62,6 +62,7 @@
                 rosetta = pkgs.mkShellNoCC {
                     packages = with pkgs; [
                         duckdb
+                        go
                         just
                         nodejs
                         postgresql
