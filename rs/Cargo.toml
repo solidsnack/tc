@@ -24,6 +24,10 @@ proptest = "1.11.0"
 time = { version = "0.3.55", features = ["parsing"] }
 yaml-rust2 = "0.13.0"
 
+# Acronyms in names are written in capitals, as in TC5 and CLI.
+[lints.clippy]
+upper_case_acronyms = "allow"
+
 # A small command line tool. Cargo ignores the profiles of dependencies, so
 # this applies only when building this crate, as cargo install does.
 [profile.release]

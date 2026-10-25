@@ -23,6 +23,9 @@ party library imports and internal imports. There should be a blank line
 between groups. Each group should be alphabetized. (Some languages, like Python
 and Rust, have formatters that can do this for you.)
 
+In languages where `CamelCase` is used, prefer all-caps acronyms, like `UUID`,
+to title-case acronyms like `Uuid`. Treat `ID` as an acronym.
+
 ### Bash
 
 1. Prefer the forms given below for `if` and other structures.
