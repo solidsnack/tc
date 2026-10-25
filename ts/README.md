@@ -38,6 +38,13 @@ its half month, is read as the last second of the half month: `2016ZZNMB0` is
 
 ## Command Line
 
+With Nix, the flake at the root of the repository builds it, as
+`timecode-ts`:
+
+```sh
+nix profile add github:solidsnack/tc#timecode-ts
+```
+
 ```sh
 timecode                           # the current time, as 2026VDJB
 timecode tc8 2026-10-17T14:23:45Z  # 2026VDJB
@@ -68,3 +75,5 @@ npm install
 npm test     # builds, then runs specification/tests.yaml and the properties
 npm run fmt  # dprint, with the guidance's settings in dprint.json
 ```
+
+With Nix, `nix develop .#ts` gives a shell with Node and `just`.

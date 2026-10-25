@@ -1,5 +1,9 @@
 tmp/
 
+# The links nix build makes.
+result
+result-*
+
 # IDEs
 .idea/
 .vscode/

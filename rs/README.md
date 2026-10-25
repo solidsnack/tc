@@ -68,6 +68,12 @@ The command line tool needs the `cli` feature, which brings in `clap`.
 cargo install --locked --features=cli --path .
 ```
 
+With Nix, the flake at the root of the repository builds it:
+
+```sh
+nix profile add github:solidsnack/tc
+```
+
 ```sh
 timecode                           # the current time, as 2026VDJB
 timecode tc8 2026-10-17T14:23:45Z  # 2026VDJB
@@ -98,3 +104,6 @@ cargo test --all-features  # specification/tests.yaml, properties, docs
 cargo run --features=cli   # the command line tool
 cargo fmt && cargo clippy --all-targets --all-features
 ```
+
+With Nix, `nix develop .#rs` gives a shell with Cargo, Clippy, rustfmt,
+rust-analyzer and `just`.

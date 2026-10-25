@@ -63,3 +63,6 @@ end of its half month, is read as the last second of the half month:
 ./gradlew test   # specification/tests.yaml, jqwik properties and a Java test
 ./gradlew build  # the jar and a sources jar, in build/libs
 ```
+
+With Nix, `nix develop .#kt` gives a shell with JDK 17, which the build
+needs, and `just`. The Gradle wrapper brings Gradle and Kotlin.

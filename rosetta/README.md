@@ -93,7 +93,8 @@ specification.
 Each function stands alone, so it can be copied into another script as it
 is. It reads the current time with one call to `date`, which must know `%N`
 for `--extend`, as GNU date and the date of macOS 26 do. The script needs
-Bash 3.2 or later.
+Bash 3.2 or later, at `/bin/bash`; where there is none, as on NixOS, it can
+be run as `bash bash/timecode.bash`.
 
 ## Precision
 
@@ -117,3 +118,10 @@ DuckDB tests use the `duckdb` command, in memory. Either is skipped when its
 database cannot be reached. The Bash tests give the script the timestamp
 of each case, and run it with a `date` command of their own, which gives
 the fraction of the second too.
+
+From anywhere in the repository, `just test-rosetta` runs the tests with a
+throwaway PostgreSQL server, on a socket in `tmp/pg`, and stops it after.
+With Nix, `nix develop .#rosetta` gives a shell with Node, PostgreSQL, DuckDB
+and `just`. Its `bash` and `date` are Bash 5 and GNU date, from Nix, so the
+tests use them where they call `bash` or the real clock, though the script
+itself still runs with `/bin/bash`.
