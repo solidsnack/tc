@@ -40,7 +40,8 @@ test-ts:
 test-kt:
     ./gradlew test
 
-# Runs the tests of the rosetta ports, with a throwaway PostgreSQL server.
+# Runs the tests of the ECMAScript, SQL and Bash ports, with a throwaway
+# PostgreSQL server.
 [group('test')]
 [working-directory('rosetta')]
 test-rosetta:
@@ -58,9 +59,53 @@ test-rosetta:
     fi
     npm test
 
+# Checks the formatting of the Go port, vets it and runs its tests.
+[group('test')]
+[working-directory('rosetta/go')]
+test-go:
+    #!/usr/bin/env bash
+    set -o errexit -o nounset -o pipefail
+    # gofmt lists the files it would change, and succeeds either way.
+    unformatted="$(gofmt -l .)"
+    if [[ -n "$unformatted" ]]
+    then
+        printf 'Not formatted with gofmt:\n%s\n' "$unformatted" >&2
+        exit 1
+    fi
+    go vet ./...
+    go test ./...
+
+# Checks the Ruby port with RuboCop, runs its tests and builds the gem.
+[group('test')]
+[working-directory('rosetta/ruby')]
+test-ruby:
+    #!/usr/bin/env bash
+    set -o errexit -o nounset -o pipefail
+    rubocop
+    rake test
+    # The gem is built only to check it, so it is thrown away.
+    out="$(mktemp -d)"
+    trap 'rm -rf "$out"' EXIT
+    gem build --strict --silent timecode.gemspec --output "$out/timecode.gem"
+
+# Checks the Python port with Ruff and mypy, runs its tests and builds it.
+[group('test')]
+[working-directory('rosetta/python')]
+test-python:
+    #!/usr/bin/env bash
+    set -o errexit -o nounset -o pipefail
+    ruff format --check
+    ruff check
+    mypy
+    pytest
+    # The package is built only to check it, so it is thrown away.
+    out="$(mktemp -d)"
+    trap 'rm -rf "$out"' EXIT
+    python -m build --no-isolation --quiet --outdir "$out"
+
 # Runs all the tests.
 [group('test')]
-test: test-rs test-ts test-kt test-rosetta
+test: test-rs test-ts test-kt test-rosetta test-go test-ruby test-python
 
 # Starts a throwaway PostgreSQL server, on a socket in rosetta/tmp/pg.
 [group('test')]
@@ -127,6 +172,9 @@ nix-shells:
     nix develop .#ts --command just test-ts
     nix develop .#kt --command just test-kt
     nix develop .#rosetta --command just test-rosetta
+    nix develop .#rosetta --command just test-go
+    nix develop .#rosetta --command just test-ruby
+    nix develop .#rosetta --command just test-python
 
 # Builds the command line tools as a flake that uses this one would.
 [group('nix')]

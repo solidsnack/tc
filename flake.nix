@@ -62,9 +62,22 @@
                 rosetta = pkgs.mkShellNoCC {
                     packages = with pkgs; [
                         duckdb
+                        go
                         just
                         nodejs
                         postgresql
+                        # For the Python port: its build backend and
+                        # frontend, type checker and tests.
+                        (python3.withPackages (ps: [
+                            ps.build
+                            ps.hatchling
+                            ps.mypy
+                            ps.pytest
+                            ps.pyyaml
+                        ]))
+                        rubocop
+                        ruby
+                        ruff
                     ];
                 };
                 default = pkgs.mkShell {

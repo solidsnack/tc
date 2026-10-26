@@ -319,11 +319,14 @@ proptest! {
 
         if offset(read) < offset(d) {
             // One second later is in the next half month, which may be past
-            // the year 9999.
-            let next = t + Duration::seconds(1);
-            let is_past = next.year() > 9999
-                || TimeCode::try_from(next).unwrap().descriptor().half_month
-                    != d.half_month;
+            // the year 9999, where the time crate's range ends.
+            let is_past = match t.checked_add(Duration::seconds(1)) {
+                Some(next) if next.year() <= 9999 => {
+                    TimeCode::try_from(next).unwrap().descriptor().half_month
+                        != d.half_month
+                }
+                _ => true,
+            };
             prop_assert!(is_past, "{d:?}: {t}");
         } else {
             prop_assert_eq!(read, d);

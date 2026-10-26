@@ -1,0 +1,6 @@
+# What Python, its tools and python -m build leave behind.
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+dist/
