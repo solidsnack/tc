@@ -2,9 +2,9 @@
 
 Small ports of the TimeCode specification, `../specification/index.md`. Most
 have a way to encode a time, at any length or as a TC5, TC8 or TCX, and a way
-to parse a code; the Bash port prints a time, by default the current time, as
-a TC5, TC8, TCX, BC4, BC5 or BC8. Each is checked against
-`../specification/tests.yaml`.
+to parse a code; the Bash port prints a time, by default the current time, or
+the author date of a commit, as a TC5, TC8, TCX, BC4, BC5 or BC8. Each is
+checked against `../specification/tests.yaml`.
 
 Most of the ports are files, which are tested together, with Node:
 
@@ -93,12 +93,16 @@ bash/timecode.bash tcx 2026-10-17T14:23:45Z  # 2026VDJBD5
 bash/timecode.bash bc5 2026-10-17T14:23:45Z  # C6VDJ
 bash/timecode.bash bc8                       # the current time, as C6VDJBD5
 bash/timecode.bash tcx --extend              # the current time, to the ms
+bash/timecode.bash bc8 --git                 # HEAD's author date
+bash/timecode.bash tcx --git main            # main's author date
 ```
 
 As `bash/README.md` says, each function takes a timestamp in UTC,
-`yyyy-mm-ddTHH:MM:SSZ`, or prints the current time without one. `tcx` also
-takes `--extend`, before any timestamp, to print the time to the
-millisecond, as a TC14, such as `2026VDJBD5.250`; a timestamp has whole
+`yyyy-mm-ddTHH:MM:SSZ`, or prints the current time without one. In place of
+a timestamp, `--git`, and perhaps a commit, prints the author date of the
+commit, `HEAD` by default, which it reads with `git log`. `tcx` also takes
+`--extend`, before any timestamp, to print the time to the millisecond, as a
+TC14, such as `2026VDJBD5.250`; a timestamp, like an author date, has whole
 seconds, so its milliseconds are `000`. Each field of a timestamp must be in
 range, though the day is not checked against the length of its month, and
 second 60, for a leap second, counts as the next second, as in the
@@ -106,9 +110,10 @@ specification.
 
 Each function stands alone, so it can be copied into another script as it
 is. It reads the current time with one call to `date`, which must know `%N`
-for `--extend`, as GNU date and the date of macOS 26 do. The script needs
-Bash 3.2 or later, at `/bin/bash`; where there is none, as on NixOS, it can
-be run as `bash bash/timecode.bash`.
+for `--extend`, as GNU date and the date of macOS 26 do, and the author date
+of a commit with one call to `git`, which must be 2.24 or later. The script
+needs Bash 3.2 or later, at `/bin/bash`; where there is none, as on NixOS,
+it can be run as `bash bash/timecode.bash`.
 
 ## Go
 
@@ -182,7 +187,8 @@ variables, and make the functions in a transaction that is rolled back. The
 DuckDB tests use the `duckdb` command, in memory. Either is skipped when its
 database cannot be reached. The Bash tests give the script the timestamp
 of each case, and run it with a `date` command of their own, which gives
-the fraction of the second too.
+the fraction of the second too; they run it with `--git` in a repository of
+their own, made with `git`.
 
 From anywhere in the repository, `just test-rosetta` runs the tests with a
 throwaway PostgreSQL server, on a socket in `tmp/pg`, and stops it after.
@@ -196,7 +202,7 @@ RuboCop, runs its tests with Rake and Minitest, and builds it; and
 tests with pytest, and builds it.
 
 With Nix, `nix develop .#rosetta` gives a shell with Node, PostgreSQL,
-DuckDB, Go, Ruby and RuboCop, Python with the tools the Python package
+DuckDB, Git, Go, Ruby and RuboCop, Python with the tools the Python package
 uses, Ruff and `just`. Its `bash` and `date` are Bash 5 and GNU date, from
 Nix, so the tests use them where they call `bash` or the real clock, though
 the script itself still runs with `/bin/bash`.

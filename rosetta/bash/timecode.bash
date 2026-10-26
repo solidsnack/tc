@@ -13,9 +13,10 @@ function main {
 
 # Each function below prints the time it is given, as a timestamp in UTC
 # such as 2026-10-17T14:23:45Z, or else the current time, which it reads
-# with one call to date. Second 60 is for a leap second. Each stands alone,
-# using nothing but its own definitions, so that it can be copied into
-# another script as it is.
+# with one call to date. Second 60 is for a leap second. With --git, each
+# prints instead the author date of a commit, HEAD by default, which it
+# reads with one call to git. Each stands alone, using nothing but its own
+# definitions, so that it can be copied into another script as it is.
 
 # A time as a TC5, such as 2026V.
 function tc5 {
@@ -24,18 +25,27 @@ function tc5 {
     local hm2_begin=$(( 372 * 3600 ))
     local timestamp='^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])'
     timestamp+='T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)Z$'
-    local now year month day hour minute second
+    local now='' year month day hour minute second
 
-    if [[ "$#" -eq 0 ]]
-    then
-        now="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return
-    else
-        now="$1"
-    fi
+    case "$#:${1:-}" in
+        0:)
+            now="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return
+            ;;
+        [12]:--git)
+            # The author date of a commit, HEAD by default.
+            now="$(TZ=UTC git log -1 --format=%ad \
+                --date='format-local:%Y-%m-%dT%H:%M:%SZ' \
+                --end-of-options "${2:-HEAD}" --)" || return
+            ;;
+        1:*)
+            now="$1"
+            ;;
+    esac
 
-    if [[ "$#" -gt 1 || ! "$now" =~ $timestamp ]]
+    # Any other arguments leave now empty, and are refused.
+    if [[ ! "$now" =~ $timestamp ]]
     then
-        printf '%s\n' 'Usage: tc5 [yyyy-mm-ddTHH:MM:SSZ]' >&2
+        printf '%s\n' 'Usage: tc5 [yyyy-mm-ddTHH:MM:SSZ | --git [commit]]' >&2
         return 2
     fi
 
@@ -64,18 +74,27 @@ function tc8 {
     local hm2_begin=$(( 372 * 3600 ))
     local timestamp='^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])'
     timestamp+='T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)Z$'
-    local now year month day hour minute second
+    local now='' year month day hour minute second
 
-    if [[ "$#" -eq 0 ]]
-    then
-        now="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return
-    else
-        now="$1"
-    fi
+    case "$#:${1:-}" in
+        0:)
+            now="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return
+            ;;
+        [12]:--git)
+            # The author date of a commit, HEAD by default.
+            now="$(TZ=UTC git log -1 --format=%ad \
+                --date='format-local:%Y-%m-%dT%H:%M:%SZ' \
+                --end-of-options "${2:-HEAD}" --)" || return
+            ;;
+        1:*)
+            now="$1"
+            ;;
+    esac
 
-    if [[ "$#" -gt 1 || ! "$now" =~ $timestamp ]]
+    # Any other arguments leave now empty, and are refused.
+    if [[ ! "$now" =~ $timestamp ]]
     then
-        printf '%s\n' 'Usage: tc8 [yyyy-mm-ddTHH:MM:SSZ]' >&2
+        printf '%s\n' 'Usage: tc8 [yyyy-mm-ddTHH:MM:SSZ | --git [commit]]' >&2
         return 2
     fi
 
@@ -100,9 +119,9 @@ function tc8 {
 }
 
 # A time as a TCX, such as 2026VDJBD5, or with --extend, as a TC14, to the
-# millisecond, such as 2026VDJBD5.250. A timestamp has whole seconds, so
-# only the current time has a fraction of the second, for which date must
-# know %N.
+# millisecond, such as 2026VDJBD5.250. A timestamp, like the author date of
+# a commit, has whole seconds, so only the current time has a fraction of
+# the second, for which date must know %N.
 function tcx {
     local p5='ABCDEFGHIJKLOPQRSTUVWXYZ'
     local p6='BDFGHJKLMPQRSTVWXYZ'
@@ -115,7 +134,7 @@ function tcx {
     timestamp+='T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)Z$'
     local extend=false
     local nanoseconds='000000000'
-    local now year month day hour minute second
+    local now='' year month day hour minute second
 
     if [[ "${1:-}" == --extend ]]
     then
@@ -123,18 +142,28 @@ function tcx {
         shift
     fi
 
-    if [[ "$#" -eq 0 ]]
-    then
-        now="$(date -u '+%Y-%m-%dT%H:%M:%SZ %N')" || return
-        nanoseconds="${now#* }"
-        now="${now%% *}"
-    else
-        now="$1"
-    fi
+    case "$#:${1:-}" in
+        0:)
+            now="$(date -u '+%Y-%m-%dT%H:%M:%SZ %N')" || return
+            nanoseconds="${now#* }"
+            now="${now%% *}"
+            ;;
+        [12]:--git)
+            # The author date of a commit, HEAD by default.
+            now="$(TZ=UTC git log -1 --format=%ad \
+                --date='format-local:%Y-%m-%dT%H:%M:%SZ' \
+                --end-of-options "${2:-HEAD}" --)" || return
+            ;;
+        1:*)
+            now="$1"
+            ;;
+    esac
 
-    if [[ "$#" -gt 1 || ! "$now" =~ $timestamp ]]
+    # Any other arguments leave now empty, and are refused.
+    if [[ ! "$now" =~ $timestamp ]]
     then
-        printf '%s\n' 'Usage: tcx [--extend] [yyyy-mm-ddTHH:MM:SSZ]' >&2
+        printf '%s\n' >&2 \
+            'Usage: tcx [--extend] [yyyy-mm-ddTHH:MM:SSZ | --git [commit]]'
         return 2
     fi
 
@@ -181,18 +210,27 @@ function bc4 {
     local hm2_begin=$(( 372 * 3600 ))
     local timestamp='^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])'
     timestamp+='T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)Z$'
-    local now year month day hour minute second
+    local now='' year month day hour minute second
 
-    if [[ "$#" -eq 0 ]]
-    then
-        now="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return
-    else
-        now="$1"
-    fi
+    case "$#:${1:-}" in
+        0:)
+            now="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return
+            ;;
+        [12]:--git)
+            # The author date of a commit, HEAD by default.
+            now="$(TZ=UTC git log -1 --format=%ad \
+                --date='format-local:%Y-%m-%dT%H:%M:%SZ' \
+                --end-of-options "${2:-HEAD}" --)" || return
+            ;;
+        1:*)
+            now="$1"
+            ;;
+    esac
 
-    if [[ "$#" -gt 1 || ! "$now" =~ $timestamp ]]
+    # Any other arguments leave now empty, and are refused.
+    if [[ ! "$now" =~ $timestamp ]]
     then
-        printf '%s\n' 'Usage: bc4 [yyyy-mm-ddTHH:MM:SSZ]' >&2
+        printf '%s\n' 'Usage: bc4 [yyyy-mm-ddTHH:MM:SSZ | --git [commit]]' >&2
         return 2
     fi
 
@@ -229,18 +267,27 @@ function bc5 {
     local hm2_begin=$(( 372 * 3600 ))
     local timestamp='^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])'
     timestamp+='T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)Z$'
-    local now year month day hour minute second
+    local now='' year month day hour minute second
 
-    if [[ "$#" -eq 0 ]]
-    then
-        now="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return
-    else
-        now="$1"
-    fi
+    case "$#:${1:-}" in
+        0:)
+            now="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return
+            ;;
+        [12]:--git)
+            # The author date of a commit, HEAD by default.
+            now="$(TZ=UTC git log -1 --format=%ad \
+                --date='format-local:%Y-%m-%dT%H:%M:%SZ' \
+                --end-of-options "${2:-HEAD}" --)" || return
+            ;;
+        1:*)
+            now="$1"
+            ;;
+    esac
 
-    if [[ "$#" -gt 1 || ! "$now" =~ $timestamp ]]
+    # Any other arguments leave now empty, and are refused.
+    if [[ ! "$now" =~ $timestamp ]]
     then
-        printf '%s\n' 'Usage: bc5 [yyyy-mm-ddTHH:MM:SSZ]' >&2
+        printf '%s\n' 'Usage: bc5 [yyyy-mm-ddTHH:MM:SSZ | --git [commit]]' >&2
         return 2
     fi
 
@@ -279,18 +326,27 @@ function bc8 {
     local hm2_begin=$(( 372 * 3600 ))
     local timestamp='^([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])'
     timestamp+='T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)Z$'
-    local now year month day hour minute second
+    local now='' year month day hour minute second
 
-    if [[ "$#" -eq 0 ]]
-    then
-        now="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return
-    else
-        now="$1"
-    fi
+    case "$#:${1:-}" in
+        0:)
+            now="$(date -u '+%Y-%m-%dT%H:%M:%SZ')" || return
+            ;;
+        [12]:--git)
+            # The author date of a commit, HEAD by default.
+            now="$(TZ=UTC git log -1 --format=%ad \
+                --date='format-local:%Y-%m-%dT%H:%M:%SZ' \
+                --end-of-options "${2:-HEAD}" --)" || return
+            ;;
+        1:*)
+            now="$1"
+            ;;
+    esac
 
-    if [[ "$#" -gt 1 || ! "$now" =~ $timestamp ]]
+    # Any other arguments leave now empty, and are refused.
+    if [[ ! "$now" =~ $timestamp ]]
     then
-        printf '%s\n' 'Usage: bc8 [yyyy-mm-ddTHH:MM:SSZ]' >&2
+        printf '%s\n' 'Usage: bc8 [yyyy-mm-ddTHH:MM:SSZ | --git [commit]]' >&2
         return 2
     fi
 
