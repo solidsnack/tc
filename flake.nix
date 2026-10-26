@@ -62,6 +62,8 @@
                 rosetta = pkgs.mkShellNoCC {
                     packages = with pkgs; [
                         duckdb
+                        # For the Bash port's --git, and its tests.
+                        git
                         go
                         just
                         nodejs

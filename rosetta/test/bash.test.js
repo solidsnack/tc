@@ -1,7 +1,8 @@
 // Runs the cases in specification/tests.yaml through the Bash port. The
 // port takes timestamps with whole seconds, and prints the current time to
 // the millisecond, so for that it is run with a date command of the tests'
-// own, which gives the time of each case.
+// own, which gives the time of each case. With --git, it is run in a
+// repository of the tests' own.
 const assert = require('node:assert/strict')
 const { spawnSync } = require('node:child_process')
 const fs = require('node:fs')
@@ -30,6 +31,58 @@ printf '%s\\n' "\${1#+}" | sed -e "s/%Y/$2/g" -e "s/%m/$3/g" -e "s/%d/$4/g" \\
     { mode: 0o755 },
 )
 after(() => fs.rmSync(bin, { recursive: true }))
+
+// A repository for --git, and git as the tests run it there: without the
+// configuration of whoever runs them, so that it is the same everywhere,
+// and in a time zone other than UTC, so that the port must ask for UTC.
+const repository = fs.mkdtempSync(path.join(os.tmpdir(), 'timecode-git-'))
+const gitEnv = {
+    ...process.env,
+    GIT_AUTHOR_EMAIL: 'tester@localhost',
+    GIT_AUTHOR_NAME: 'tester',
+    // Outside the repository, git finds none, wherever the tests are.
+    GIT_CEILING_DIRECTORIES: os.tmpdir(),
+    GIT_COMMITTER_DATE: '2026-10-26T12:00:00Z',
+    GIT_COMMITTER_EMAIL: 'tester@localhost',
+    GIT_COMMITTER_NAME: 'tester',
+    GIT_CONFIG_GLOBAL: '/dev/null',
+    GIT_CONFIG_NOSYSTEM: '1',
+    // India's time zone, as POSIX writes it, which needs no time zone
+    // database.
+    TZ: 'IST-5:30',
+}
+
+after(() => fs.rmSync(repository, { recursive: true }))
+
+// Runs a command in a directory, as git is run in the repository.
+function runIn(cwd, command, ...args) {
+    return spawnSync(command, args, { cwd, encoding: 'utf8', env: gitEnv })
+}
+
+function git(...args) {
+    const { status, stderr } = runIn(repository, 'git', ...args)
+
+    assert.equal(status, 0, stderr)
+}
+
+// The repository's commits, with the author dates they were written at, in
+// time zones other than UTC, and those dates as timestamps in UTC. They are
+// committed at another time, which the port does not read. The first is
+// tagged, and on a branch of its own; the second is HEAD, on main.
+const first = {
+    date: '2026-10-17T23:23:45+09:00',
+    timestamp: '2026-10-17T14:23:45Z',
+}
+const second = {
+    date: '2026-10-31T23:59:59-07:00',
+    timestamp: '2026-11-01T06:59:59Z',
+}
+
+git('init', '--quiet', '--initial-branch=main')
+git('commit', '--quiet', '--allow-empty', `--date=${first.date}`, '-m', '1')
+git('tag', '--annotate', '--message=The first commit', 'v1.0')
+git('branch', 'older')
+git('commit', '--quiet', '--allow-empty', `--date=${second.date}`, '-m', '2')
 
 const timestamp = new RegExp(
     '^([0-9]{4})-([0-9]{2})-([0-9]{2})' +
@@ -74,6 +127,8 @@ function assertAgrees(code, expected) {
 
     assert.equal(code.slice(0, n), expected.slice(0, n))
 }
+
+const commands = ['tc5', 'tc8', 'tcx', 'bc4', 'bc5', 'bc8']
 
 // The length of the code each command prints.
 const lengths = { tc5: 5, tc8: 8, tcx: 10 }
@@ -154,8 +209,9 @@ test('without a command, the script prints a TC8', () => {
 // What each command prints when it is given the wrong arguments.
 function usageOf(command) {
     const flag = command === 'tcx' ? ' [--extend]' : ''
+    const time = '[yyyy-mm-ddTHH:MM:SSZ | --git [commit]]'
 
-    return `Usage: ${command}${flag} [yyyy-mm-ddTHH:MM:SSZ]\n`
+    return `Usage: ${command}${flag} ${time}\n`
 }
 
 test('the commands take one timestamp, and tcx --extend before it', () => {
@@ -184,13 +240,19 @@ test('the commands take one timestamp, and tcx --extend before it', () => {
         ['tcx', '--extend', '--extend'],
         ['tcx', given, '--extend'],
         ['tc8', given, given],
+        ['tcx', '--git', 'HEAD', '--extend'],
     ]
 
-    // Each function has its own pattern for a timestamp.
-    for (const command of ['tc5', 'tc8', 'tcx', 'bc4', 'bc5', 'bc8']) {
+    // Each function has its own pattern for a timestamp, and its own --git.
+    for (const command of commands) {
         for (const timestamp of timestamps) {
             refusals.push([command, timestamp])
         }
+
+        refusals.push(
+            [command, '--git', 'HEAD', 'HEAD'],
+            [command, given, '--git'],
+        )
     }
 
     for (const args of refusals) {
@@ -230,24 +292,87 @@ function definitionOf(name) {
 
 // Copied into a script by itself, a function works whether or not the
 // script sets the options this one does, and leaves no variables behind:
-// declare would print them.
-test('each function stands alone', () => {
-    for (const [call, code] of codes) {
-        const { definition, words } = definitionOf(call.split(' ')[0])
+// declare would print them. The script is run by a function like run.
+function assertStandsAlone(call, code, runner) {
+    const { definition, words } = definitionOf(call.split(' ')[0])
 
-        assert.ok(words.includes('half_month'), call)
+    assert.ok(words.includes('half_month'), call)
 
-        for (const options of ['', 'set -o errexit -o nounset -o pipefail']) {
-            const shell = `${options}
+    for (const options of ['', 'set -o errexit -o nounset -o pipefail']) {
+        const shell = `${options}
 ${definition}
 ${call}
 declare -p ${words.join(' ')} 2>/dev/null || true
 `
-            const { status, stdout, stderr } = run(t, 'bash', '-c', shell)
+        const { status, stdout, stderr } = runner('bash', '-c', shell)
 
-            assert.equal(stderr, '', call)
-            assert.equal(stdout, `${code}\n`, call)
-            assert.equal(status, 0, call)
+        assert.equal(stderr, '', call)
+        assert.equal(stdout, `${code}\n`, call)
+        assert.equal(status, 0, call)
+    }
+}
+
+test('each function stands alone', () => {
+    for (const [call, code] of codes) {
+        assertStandsAlone(call, code, (...args) => run(t, ...args))
+    }
+
+    for (const command of commands) {
+        const code = print('', command, second.timestamp)
+
+        assertStandsAlone(`${command} --git`, code, (...args) =>
+            runIn(repository, ...args),
+        )
+    }
+})
+
+test('--git prints the author date of a commit, HEAD by default', () => {
+    const hash = runIn(repository, 'git', 'rev-parse', 'older').stdout.trim()
+    const revisions = [
+        [[], second],
+        [['HEAD'], second],
+        [['main'], second],
+        [['HEAD~1'], first],
+        [['older'], first],
+        [['v1.0'], first],
+        [[hash], first],
+    ]
+
+    // The code of a commit is the code of its timestamp, with each command.
+    for (const [revision, { timestamp }] of revisions) {
+        for (const call of [...commands, 'tcx --extend']) {
+            const args = [...call.split(' '), '--git', ...revision]
+            const code = print('', ...call.split(' '), timestamp)
+            const result = runIn(repository, script, ...args)
+
+            assert.equal(result.stderr, '', args.join(' '))
+            assert.equal(result.stdout, `${code}\n`, args.join(' '))
+            assert.equal(result.status, 0, args.join(' '))
+        }
+    }
+
+    // Without a command, the script runs tc8.
+    const tc8 = print('', 'tc8', second.timestamp)
+
+    assert.equal(runIn(repository, script, '--git').stdout, `${tc8}\n`)
+})
+
+test('--git fails as git does, with no commit or repository', () => {
+    const failures = [
+        [repository, 'nope', "fatal: bad revision 'nope'"],
+        // An option of git log is read as a commit, and is not found.
+        [repository, '--all', "fatal: bad revision '--all'"],
+        [bin, 'HEAD', 'fatal: not a git repository'],
+    ]
+
+    for (const [cwd, revision, message] of failures) {
+        for (const command of commands) {
+            const call = `${command} --git ${revision}`
+            const result = runIn(cwd, script, command, '--git', revision)
+
+            assert.equal(result.status, 128, call)
+            assert.equal(result.stdout, '', call)
+            assert.ok(result.stderr.startsWith(message), call)
         }
     }
 })
