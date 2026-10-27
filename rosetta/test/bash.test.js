@@ -326,6 +326,39 @@ test('each function stands alone', () => {
     }
 })
 
+// So that the functions fit in a justfile, or a string in another program,
+// with room to indent them.
+test('no line of the script is longer than 64 columns', () => {
+    for (const [i, line] of source.split('\n').entries()) {
+        assert.ok(line.length <= 64, `line ${i + 1}: ${line}`)
+    }
+})
+
+const hasJust = spawnSync('just', ['--version']).status === 0
+
+// Copied into a justfile, as the body of a recipe that is a script, each
+// function works too: just finds nothing in it to read as its own, like {{.
+test('each function works in a justfile', { skip: !hasJust }, () => {
+    const justfile = path.join(bin, 'justfile')
+    const recipes = codes.map(([call], i) => {
+        const { definition } = definitionOf(call.split(' ')[0])
+        const lines = ['#!/usr/bin/env bash', ...definition.split('\n'), call]
+        const body = lines.map((line) => (line ? `    ${line}` : line))
+
+        return [`recipe-${i}:`, ...body].join('\n')
+    })
+
+    fs.writeFileSync(justfile, `${recipes.join('\n\n')}\n`)
+
+    for (const [i, [call, code]] of codes.entries()) {
+        const args = ['--justfile', justfile, `recipe-${i}`]
+        const { status, stdout, stderr } = run(t, 'just', ...args)
+
+        assert.equal(stdout, `${code}\n`, `${call}: ${stderr}`)
+        assert.equal(status, 0, call)
+    }
+})
+
 test('--git prints the author date of a commit, HEAD by default', () => {
     const hash = runIn(repository, 'git', 'rev-parse', 'older').stdout.trim()
     const revisions = [
