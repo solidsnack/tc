@@ -39,6 +39,7 @@ function tc5 {
         [12]:--git)
             # The author date of a commit, HEAD by default.
             now="$(TZ=UTC git log -1 --format=%ad \
+                --no-show-signature \
                 --date='format-local:%Y-%m-%dT%H:%M:%SZ' \
                 --end-of-options "${2:-HEAD}" --)" || return
             ;;
@@ -92,6 +93,7 @@ function tc8 {
         [12]:--git)
             # The author date of a commit, HEAD by default.
             now="$(TZ=UTC git log -1 --format=%ad \
+                --no-show-signature \
                 --date='format-local:%Y-%m-%dT%H:%M:%SZ' \
                 --end-of-options "${2:-HEAD}" --)" || return
             ;;
@@ -166,6 +168,7 @@ function tcx {
         [12]:--git)
             # The author date of a commit, HEAD by default.
             now="$(TZ=UTC git log -1 --format=%ad \
+                --no-show-signature \
                 --date='format-local:%Y-%m-%dT%H:%M:%SZ' \
                 --end-of-options "${2:-HEAD}" --)" || return
             ;;
@@ -239,6 +242,7 @@ function bc4 {
         [12]:--git)
             # The author date of a commit, HEAD by default.
             now="$(TZ=UTC git log -1 --format=%ad \
+                --no-show-signature \
                 --date='format-local:%Y-%m-%dT%H:%M:%SZ' \
                 --end-of-options "${2:-HEAD}" --)" || return
             ;;
@@ -302,6 +306,7 @@ function bc5 {
         [12]:--git)
             # The author date of a commit, HEAD by default.
             now="$(TZ=UTC git log -1 --format=%ad \
+                --no-show-signature \
                 --date='format-local:%Y-%m-%dT%H:%M:%SZ' \
                 --end-of-options "${2:-HEAD}" --)" || return
             ;;
@@ -368,6 +373,7 @@ function bc8 {
         [12]:--git)
             # The author date of a commit, HEAD by default.
             now="$(TZ=UTC git log -1 --format=%ad \
+                --no-show-signature \
                 --date='format-local:%Y-%m-%dT%H:%M:%SZ' \
                 --end-of-options "${2:-HEAD}" --)" || return
             ;;
